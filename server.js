@@ -1,35 +1,33 @@
 import dotenv from 'dotenv';
-import connectDB from './src/config/db.js';
 import app from './src/app.js';
-import { verifySMTP, isSmtpConfigured } from './src/services/mailService.js';
+import connectDB from './src/config/database.js';
+import { verifySmtpConnection } from './src/services/emailService.js';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 4000;
 
-const startServer = async () => {
+// Startup sequence
+async function startServer() {
   try {
+    // 1. Connect to database
     await connectDB();
 
-    app.listen(PORT, () => {
+    // 2. Verify SMTP connection
+    console.log('\n🔍 Verifying SMTP connection...');
+    await verifySmtpConnection();
+    console.log('');
+
+    // 3. Start server
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`✓ Server is running on http://localhost:${PORT}`);
       console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
     });
-
-    if (isSmtpConfigured()) {
-      const result = await verifySMTP();
-      if (result.ok) {
-        console.log('✓ SMTP ready');
-      } else {
-        console.error('✗ SMTP verify failed:', result.error);
-      }
-    } else {
-      console.log('ℹ SMTP not configured; emails will be logged');
-    }
-  } catch (error) {
-    console.error('✗ Failed to start server:', error.message);
-    process.exit(1);
   }
+  } catch (error) {
+  console.error('✗ Failed to start server:', error.message);
+  process.exit(1);
+}
 };
 
 startServer();

@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/authRoutes.js';
 import recordRoutes from './routes/recordRoutes.js';
 import accessRequestRoutes from './routes/accessRequestRoutes.js';
+import testRoutes from './routes/testRoutes.js';
 import { sendMail } from './services/mailService.js';
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/', generalLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/access-requests', accessRequestRoutes);
+app.use('/api', testRoutes); // Test routes
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({
