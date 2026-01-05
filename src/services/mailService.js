@@ -58,9 +58,7 @@ export const sendMail = async ({ to, subject, text, html }) => {
     }
   }
 
-  // Extract OTP code if present
-  const otpMatch = text ? text.match(/Your OTP code is: (\d{6})/) : null
-
+  // No SMTP configured - development mode
   console.log('\n' + '='.repeat(60))
   console.log('📧 MAIL (Development Mode - SMTP Not Configured)')
   console.log('='.repeat(60))
