@@ -23,11 +23,10 @@ async function startServer() {
       console.log(`✓ Server is running on http://localhost:${PORT}`);
       console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
     });
-  }
   } catch (error) {
-  console.error('✗ Failed to start server:', error.message);
-  process.exit(1);
+    console.error('❌ Server startup failed:', error);
+    process.exit(1);
+  }
 }
-};
 
 startServer();
