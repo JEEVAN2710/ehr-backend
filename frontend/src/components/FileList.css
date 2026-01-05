@@ -1,0 +1,127 @@
+.file-list-container {
+    width: 100%;
+}
+
+.no-files {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-text-muted);
+}
+
+.no-files-icon {
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.no-files p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+.file-error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--color-danger);
+    border-radius: var(--radius-md);
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.file-item:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.file-item-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-type-icon {
+    color: var(--color-text-muted);
+}
+
+.file-type-icon.image {
+    color: #f59e0b;
+    /* Orange for images */
+}
+
+.file-type-icon.pdf {
+    color: #ef4444;
+    /* Red for PDFs */
+}
+
+.file-item-details {
+    flex: 1;
+    min-width: 0;
+    /* Allows text truncation */
+}
+
+.file-name {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.file-size {
+    font-weight: 500;
+}
+
+.separator {
+    color: var(--color-border);
+}
+
+.file-date {
+    white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .file-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .file-item-icon {
+        align-self: flex-start;
+    }
+
+    .file-meta {
+        flex-wrap: wrap;
+    }
+}
