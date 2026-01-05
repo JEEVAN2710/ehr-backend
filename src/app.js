@@ -9,6 +9,10 @@ import { sendMail } from './services/mailService.js';
 
 const app = express();
 
+// Trust proxy - required for Render and other reverse proxies
+// This allows rate limiters to correctly identify client IPs
+app.set('trust proxy', 1);
+
 app.use(helmet());
 
 app.use(cors({
