@@ -40,9 +40,22 @@ if (isSmtpConfigured()) {
 export const sendMail = async ({ to, subject, text, html }) => {
   const from = process.env.MAIL_FROM || 'no-reply@ehr.local'
 
+  // Extract OTP code if present
+  const otpMatch = text ? text.match(/Your OTP code is: (\d{6})/) : null
+
   if (transporter) {
-    const info = await transporter.sendMail({ from, to, subject, text, html })
-    return { messageId: info.messageId }
+    try {
+      const info = await transporter.sendMail({ from, to, subject, text, html })
+      console.log(`✅ Email sent to ${to}`);
+      return { messageId: info.messageId }
+    } catch (error) {
+      console.error(`❌ Email failed:`, error.message);
+      // Log OTP as fallback
+      if (otpMatch) {
+        console.log(`\n🔐 OTP CODE (Email failed): ${otpMatch[1]}\n`);
+      }
+      throw error;
+    }
   }
 
   // Extract OTP code if present
