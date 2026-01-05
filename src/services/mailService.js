@@ -8,15 +8,26 @@ export const isSmtpConfigured = () =>
 let transporter
 
 if (isSmtpConfigured()) {
+  const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
+  const isSecure = smtpPort === 465; // Use secure for port 465, TLS for 587
+
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: process.env.SMTP_SECURE === 'true',
+    port: smtpPort,
+    secure: isSecure, // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
+    tls: {
+      rejectUnauthorized: false, // Allow self-signed certificates
+    },
   })
+
+  console.log(`📧 SMTP configured: ${process.env.SMTP_HOST}:${smtpPort} (secure: ${isSecure})`);
 } else {
   transporter = null
   console.log('SMTP missing:', {
