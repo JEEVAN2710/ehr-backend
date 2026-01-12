@@ -9,7 +9,7 @@ const router = express.Router();
 router.use(authenticateToken);
 
 router.post(
-  '/presign',
+  '/presigned-upload',
   authorizeRoles('patient', 'doctor', 'labassistant'),
   [
     body('filename').trim().notEmpty().withMessage('Filename is required'),
@@ -20,7 +20,7 @@ router.post(
 );
 
 router.post(
-  '/download',
+  '/presigned-download',
   authorizeRoles('patient', 'doctor', 'labassistant'),
   [body('fileKey').trim().notEmpty().withMessage('File key is required')],
   getPresignedDownloadUrl

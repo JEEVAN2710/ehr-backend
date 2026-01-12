@@ -2,90 +2,118 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import Card from '../components/Card';
-import Button from '../components/Button';
 import Badge from '../components/Badge';
 import LoadingSpinner from '../components/LoadingSpinner';
-import EditUserModal from '../components/EditUserModal';
-import { Users, CheckCircle, XCircle, Filter, Edit } from 'lucide-react';
-import { formatDate, formatRole } from '../utils/utils';
-import { USER_ROLES } from '../utils/constants';
+import { Activity, AlertCircle, CheckCircle, XCircle, Clock, User, FileText } from 'lucide-react';
+import { formatDate } from '../utils/utils';
 import './Dashboard.css';
 
 const AdminDashboard = () => {
     const { user } = useAuth();
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState({
-        role: '',
-        isActive: ''
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [stats, setStats] = useState({
+        totalErrors: 0,
+        todayErrors: 0,
+        totalActivities: 0,
+        todayActivities: 0
     });
-    const [editModalOpen, setEditModalOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('all'); // all, error, success, info
 
     useEffect(() => {
-        loadUsers();
-    }, [filters]);
+        loadAuditLogs();
+    }, [filter]);
 
-    const loadUsers = async () => {
+    const loadAuditLogs = async () => {
         try {
             setLoading(true);
-            const params = {};
-            if (filters.role) params.role = filters.role;
-            if (filters.isActive !== '') params.isActive = filters.isActive === 'true';
-
-            const response = await api.getUsers(params);
-            setUsers(response.data.users);
+            // Simulated audit logs - in production, this would come from backend
+            const mockLogs = generateMockAuditLogs();
+            const filteredLogs = filterLogs(mockLogs, filter);
+            setAuditLogs(filteredLogs);
+            calculateStats(mockLogs);
         } catch (error) {
-            console.error('Failed to load users:', error);
+            console.error('Failed to load audit logs:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleStatusToggle = async (userId, currentStatus) => {
-        try {
-            await api.updateUserStatus(userId, !currentStatus);
-            loadUsers(); // Reload users
-        } catch (error) {
-            console.error('Failed to update user status:', error);
-            alert('Failed to update user status');
+    const generateMockAuditLogs = () => {
+        const actions = [
+            { type: 'success', action: 'User Login', user: 'Dr. John Smith', details: 'Successful authentication' },
+            { type: 'error', action: 'Failed Login Attempt', user: 'Unknown', details: 'Invalid credentials for email@example.com' },
+            { type: 'success', action: 'Record Created', user: 'Dr. Sarah Johnson', details: 'Created medical record for patient #1234' },
+            { type: 'error', action: 'Access Denied', user: 'Dr. Mike Brown', details: 'Attempted to access restricted patient data' },
+            { type: 'info', action: 'Password Reset', user: 'System', details: 'Password reset email sent to user@example.com' },
+            { type: 'success', action: 'User Registered', user: 'System', details: 'New patient account created' },
+            { type: 'error', action: 'Database Error', user: 'System', details: 'Connection timeout to database server' },
+            { type: 'success', action: 'Record Shared', user: 'Patient Jane Doe', details: 'Shared records with Dr. Smith' },
+            { type: 'warning', action: 'Rate Limit Exceeded', user: 'System', details: 'Too many requests from IP 192.168.1.100' },
+            { type: 'error', action: 'File Upload Failed', user: 'Dr. Emily Clark', details: 'File size exceeds maximum limit' },
+        ];
+
+        return actions.map((log, index) => ({
+            id: index + 1,
+            ...log,
+            timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Random time within last week
+        })).sort((a, b) => b.timestamp - a.timestamp);
+    };
+
+    const filterLogs = (logs, filterType) => {
+        if (filterType === 'all') return logs;
+        if (filterType === 'error') return logs.filter(log => log.type === 'error' || log.type === 'warning');
+        return logs.filter(log => log.type === filterType);
+    };
+
+    const calculateStats = (logs) => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const errors = logs.filter(log => log.type === 'error' || log.type === 'warning');
+        const todayErrors = errors.filter(log => log.timestamp >= today);
+        const todayLogs = logs.filter(log => log.timestamp >= today);
+
+        setStats({
+            totalErrors: errors.length,
+            todayErrors: todayErrors.length,
+            totalActivities: logs.length,
+            todayActivities: todayLogs.length
+        });
+    };
+
+    const getLogIcon = (type) => {
+        switch (type) {
+            case 'error':
+                return <XCircle size={20} className="log-icon error" />;
+            case 'warning':
+                return <AlertCircle size={20} className="log-icon warning" />;
+            case 'success':
+                return <CheckCircle size={20} className="log-icon success" />;
+            case 'info':
+                return <Activity size={20} className="log-icon info" />;
+            default:
+                return <Activity size={20} className="log-icon" />;
         }
     };
 
-    const handleEditUser = (userToEdit) => {
-        setSelectedUser(userToEdit);
-        setEditModalOpen(true);
-    };
-
-    const handleUpdateUser = async (userId, userData) => {
-        try {
-            await api.updateUser(userId, userData);
-            setEditModalOpen(false);
-            setSelectedUser(null);
-            loadUsers(); // Reload users
-            alert('User updated successfully!');
-        } catch (error) {
-            console.error('Failed to update user:', error);
-            throw error; // Re-throw to be caught by modal
-        }
-    };
-
-    const totalUsers = users.length;
-    const activeUsers = users.filter(u => u.isActive).length;
-    const inactiveUsers = totalUsers - activeUsers;
-
-    const getRoleBadgeVariant = (role) => {
-        switch (role) {
-            case USER_ROLES.ADMIN: return 'danger';
-            case USER_ROLES.DOCTOR: return 'primary';
-            case USER_ROLES.LAB_ASSISTANT: return 'info';
-            case USER_ROLES.PATIENT: return 'success';
-            default: return 'default';
+    const getLogBadgeVariant = (type) => {
+        switch (type) {
+            case 'error':
+                return 'danger';
+            case 'warning':
+                return 'warning';
+            case 'success':
+                return 'success';
+            case 'info':
+                return 'info';
+            default:
+                return 'secondary';
         }
     };
 
     if (loading) {
-        return <LoadingSpinner text="Loading users..." />;
+        return <LoadingSpinner text="Loading audit logs..." />;
     }
 
     return (
@@ -93,18 +121,38 @@ const AdminDashboard = () => {
             <div className="dashboard-header">
                 <div>
                     <h1 className="dashboard-title">Admin Dashboard</h1>
-                    <p className="dashboard-subtitle">Manage users and system settings</p>
+                    <p className="dashboard-subtitle">System audit logs and error monitoring</p>
                 </div>
             </div>
 
             <div className="stats-grid">
                 <Card className="stat-card" glass>
-                    <div className="stat-icon" style={{ background: 'var(--gradient-primary)' }}>
-                        <Users size={24} />
+                    <div className="stat-icon" style={{ background: 'var(--gradient-danger)' }}>
+                        <XCircle size={24} />
                     </div>
                     <div className="stat-content">
-                        <div className="stat-label">Total Users</div>
-                        <div className="stat-value">{totalUsers}</div>
+                        <div className="stat-label">Total Errors</div>
+                        <div className="stat-value">{stats.totalErrors}</div>
+                    </div>
+                </Card>
+
+                <Card className="stat-card" glass>
+                    <div className="stat-icon" style={{ background: 'var(--gradient-warning)' }}>
+                        <AlertCircle size={24} />
+                    </div>
+                    <div className="stat-content">
+                        <div className="stat-label">Today's Errors</div>
+                        <div className="stat-value">{stats.todayErrors}</div>
+                    </div>
+                </Card>
+
+                <Card className="stat-card" glass>
+                    <div className="stat-icon" style={{ background: 'var(--gradient-primary)' }}>
+                        <Activity size={24} />
+                    </div>
+                    <div className="stat-content">
+                        <div className="stat-label">Total Activities</div>
+                        <div className="stat-value">{stats.totalActivities}</div>
                     </div>
                 </Card>
 
@@ -113,139 +161,77 @@ const AdminDashboard = () => {
                         <CheckCircle size={24} />
                     </div>
                     <div className="stat-content">
-                        <div className="stat-label">Active Users</div>
-                        <div className="stat-value">{activeUsers}</div>
-                    </div>
-                </Card>
-
-                <Card className="stat-card" glass>
-                    <div className="stat-icon" style={{ background: 'var(--gradient-danger)' }}>
-                        <XCircle size={24} />
-                    </div>
-                    <div className="stat-content">
-                        <div className="stat-label">Inactive Users</div>
-                        <div className="stat-value">{inactiveUsers}</div>
+                        <div className="stat-label">Today's Activities</div>
+                        <div className="stat-value">{stats.todayActivities}</div>
                     </div>
                 </Card>
             </div>
 
             <div className="dashboard-section">
                 <div className="section-header">
-                    <h2>User Management</h2>
+                    <h2>Audit Logs</h2>
                 </div>
 
                 <Card glass className="filters-card">
                     <div className="filters-container">
                         <div className="filter-item">
-                            <label>Filter by Role:</label>
+                            <label>Filter by Type:</label>
                             <select
-                                value={filters.role}
-                                onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
                                 className="filter-select"
                             >
-                                <option value="">All Roles</option>
-                                <option value={USER_ROLES.PATIENT}>Patient</option>
-                                <option value={USER_ROLES.DOCTOR}>Doctor</option>
-                                <option value={USER_ROLES.LAB_ASSISTANT}>Lab Assistant</option>
-                                <option value={USER_ROLES.ADMIN}>Admin</option>
-                            </select>
-                        </div>
-
-                        <div className="filter-item">
-                            <label>Filter by Status:</label>
-                            <select
-                                value={filters.isActive}
-                                onChange={(e) => setFilters({ ...filters, isActive: e.target.value })}
-                                className="filter-select"
-                            >
-                                <option value="">All Status</option>
-                                <option value="true">Active</option>
-                                <option value="false">Inactive</option>
+                                <option value="all">All Activities</option>
+                                <option value="error">Errors & Warnings</option>
+                                <option value="success">Success</option>
+                                <option value="info">Info</option>
                             </select>
                         </div>
                     </div>
                 </Card>
 
-                <div className="users-table-container">
-                    <Card glass>
-                        <div className="table-responsive">
-                            <table className="users-table">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Phone</th>
-                                        <th>Joined</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.map(u => (
-                                        <tr key={u._id}>
-                                            <td>
-                                                <div className="user-cell">
-                                                    <div className="user-avatar-sm">
-                                                        {u.firstName[0]}{u.lastName[0]}
-                                                    </div>
-                                                    <span>{u.firstName} {u.lastName}</span>
-                                                </div>
-                                            </td>
-                                            <td>{u.email}</td>
-                                            <td>
-                                                <Badge variant={getRoleBadgeVariant(u.role)} size="sm">
-                                                    {formatRole(u.role)}
-                                                </Badge>
-                                            </td>
-                                            <td>{u.phoneNumber || '-'}</td>
-                                            <td>{formatDate(u.createdAt)}</td>
-                                            <td>
-                                                <Badge variant={u.isActive ? 'success' : 'danger'} size="sm">
-                                                    {u.isActive ? 'Active' : 'Inactive'}
-                                                </Badge>
-                                            </td>
-                                            <td>
-                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                    {u._id !== user._id && (
-                                                        <>
-                                                            <Button
-                                                                variant="secondary"
-                                                                size="sm"
-                                                                onClick={() => handleEditUser(u)}
-                                                            >
-                                                                <Edit size={16} style={{ marginRight: '4px' }} />
-                                                                Edit
-                                                            </Button>
-                                                            <Button
-                                                                variant={u.isActive ? 'danger' : 'success'}
-                                                                size="sm"
-                                                                onClick={() => handleStatusToggle(u._id, u.isActive)}
-                                                            >
-                                                                {u.isActive ? 'Deactivate' : 'Activate'}
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                <div className="audit-logs-container">
+                    {auditLogs.map((log) => (
+                        <Card key={log.id} className="audit-log-card" glass>
+                            <div className="audit-log-header">
+                                <div className="audit-log-title">
+                                    {getLogIcon(log.type)}
+                                    <span>{log.action}</span>
+                                </div>
+                                <Badge variant={getLogBadgeVariant(log.type)} size="sm">
+                                    {log.type.toUpperCase()}
+                                </Badge>
+                            </div>
+                            <div className="audit-log-body">
+                                <div className="audit-log-meta">
+                                    <div className="audit-meta-item">
+                                        <User size={16} />
+                                        <span>{log.user}</span>
+                                    </div>
+                                    <div className="audit-meta-item">
+                                        <Clock size={16} />
+                                        <span>{formatDate(log.timestamp)}</span>
+                                    </div>
+                                </div>
+                                <div className="audit-log-details">
+                                    <FileText size={16} />
+                                    <span>{log.details}</span>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+
+                {auditLogs.length === 0 && (
+                    <Card>
+                        <div className="empty-state">
+                            <Activity size={48} />
+                            <h3>No Logs Found</h3>
+                            <p>No audit logs match the selected filter</p>
                         </div>
                     </Card>
-                </div>
+                )}
             </div>
-
-            <EditUserModal
-                isOpen={editModalOpen}
-                onClose={() => {
-                    setEditModalOpen(false);
-                    setSelectedUser(null);
-                }}
-                user={selectedUser}
-                onSave={handleUpdateUser}
-            />
         </div>
     );
 };

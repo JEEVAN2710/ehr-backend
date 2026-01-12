@@ -84,7 +84,7 @@ const CreateRecord = () => {
             // Step 3: Store file info
             onProgress(100);
             const fileInfo = {
-                key: uploadResponse.data.key,
+                fileKey: uploadResponse.data.key,
                 filename: file.name,
                 contentType: file.type,
                 size: file.size

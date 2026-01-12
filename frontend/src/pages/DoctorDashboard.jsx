@@ -20,6 +20,10 @@ const DoctorDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [scanQRModalOpen, setScanQRModalOpen] = useState(false);
     const [requestAccessModalOpen, setRequestAccessModalOpen] = useState(false);
+    const [stats, setStats] = useState({
+        recordsCreated: 0,
+        patientsCount: 0
+    });
 
     useEffect(() => {
         loadDashboardData();
@@ -28,10 +32,18 @@ const DoctorDashboard = () => {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            // Get all records created by this doctor (from dummy data)
-            // In real app, you'd have an endpoint for this
-            const allRecords = [];
-            setRecentRecords(allRecords.slice(0, 6));
+            // Get records created by this doctor using creator/me endpoint
+            const response = await api.getRecordsByCreator(user._id);
+            const records = response.data.records || [];
+
+            // Get unique patient IDs
+            const uniquePatients = new Set(records.map(r => r.patientId?._id || r.patientId).filter(Boolean));
+
+            setRecentRecords(records.slice(0, 6));
+            setStats({
+                recordsCreated: records.length,
+                patientsCount: uniquePatients.size
+            });
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
         } finally {
@@ -85,7 +97,7 @@ const DoctorDashboard = () => {
                     </div>
                     <div className="stat-content">
                         <div className="stat-label">Records Created</div>
-                        <div className="stat-value">{recentRecords.length}</div>
+                        <div className="stat-value">{stats.recordsCreated}</div>
                     </div>
                 </Card>
 
@@ -95,7 +107,7 @@ const DoctorDashboard = () => {
                     </div>
                     <div className="stat-content">
                         <div className="stat-label">Patients</div>
-                        <div className="stat-value">-</div>
+                        <div className="stat-value">{stats.patientsCount}</div>
                     </div>
                 </Card>
             </div>

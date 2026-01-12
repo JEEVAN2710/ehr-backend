@@ -1,0 +1,8 @@
+# Add this to your .env file to fix CORS
+CORS_ORIGIN=http://localhost:5173
+
+# Instructions:
+# 1. Open your .env file in e:\EHR
+# 2. Add the line above (CORS_ORIGIN=http://localhost:5173)
+# 3. The server will auto-restart
+# 4. Try logging in again

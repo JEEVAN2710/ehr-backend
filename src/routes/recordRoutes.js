@@ -10,6 +10,8 @@ import {
   shareRecord,
   revokeRecordSharing,
   getSharedRecords,
+  generateShareAllToken,
+  getRecordsByShareToken,
 } from '../controllers/recordController.js';
 import authenticateToken from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
@@ -31,6 +33,13 @@ router.post(
       .withMessage('Invalid record type'),
   ],
   createRecord
+);
+
+// Get records created by current user (for doctor dashboard)
+router.get(
+  '/my-records',
+  authorizeRoles('doctor', 'labassistant'),
+  getPatientRecords
 );
 
 router.get(
@@ -114,4 +123,23 @@ router.get(
   getSharedRecords
 );
 
+// Share all records - generate token (patient only)
+router.post(
+  '/share-all',
+  authorizeRoles('patient'),
+  [
+    body('duration').optional().isIn(['4h', '24h', '7d']).withMessage('Invalid duration'),
+  ],
+  generateShareAllToken
+);
+
+// Public route - Get records by share token (no auth required)
+const publicRouter = express.Router();
+publicRouter.get(
+  '/shared/:token',
+  [param('token').notEmpty().withMessage('Token is required')],
+  getRecordsByShareToken
+);
+
+export { publicRouter };
 export default router;

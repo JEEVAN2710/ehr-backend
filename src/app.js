@@ -3,8 +3,9 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/authRoutes.js';
-import recordRoutes from './routes/recordRoutes.js';
+import recordRoutes, { publicRouter as publicRecordRoutes } from './routes/recordRoutes.js';
 import accessRequestRoutes from './routes/accessRequestRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 import testRoutes from './routes/testRoutes.js';
 import { sendMail } from './services/mailService.js';
 
@@ -38,9 +39,13 @@ const generalLimiter = rateLimit({
 
 app.use('/api/', generalLimiter);
 
+// Public routes (no authentication)
+app.use('/api/records', publicRecordRoutes);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/access-requests', accessRequestRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api', testRoutes); // Test routes
 
 app.get('/api/health', (req, res) => {

@@ -45,7 +45,7 @@ const DashboardLayout = ({ children }) => {
             },
             {
                 icon: <Share2 size={20} />,
-                label: 'Shared With Me',
+                label: user?.role === USER_ROLES.PATIENT ? 'Shared With' : 'Shared with Me',
                 path: '/shared-records',
                 roles: [USER_ROLES.PATIENT, USER_ROLES.DOCTOR, USER_ROLES.LAB_ASSISTANT]
             },

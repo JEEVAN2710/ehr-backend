@@ -7,6 +7,11 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import CreateRecord from './pages/CreateRecord';
+import ViewRecord from './pages/ViewRecord';
+import RecordsList from './pages/RecordsList';
+import SharedRecordsView from './pages/SharedRecordsView';
+import AccessRequests from './pages/AccessRequests';
+import UserManagement from './pages/UserManagement';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Protected Route wrapper
@@ -83,6 +88,9 @@ function AppRoutes() {
         </PublicRoute>
       } />
 
+      {/* Public Shared Records View - No authentication required */}
+      <Route path="/shared/all/:token" element={<SharedRecordsView />} />
+
       {/* Protected Routes */}
       <Route path="/dashboard" element={
         <ProtectedRoute>
@@ -98,7 +106,7 @@ function AppRoutes() {
 
       <Route path="/records" element={
         <ProtectedRoute>
-          <ComingSoon pageName="Medical Records List" />
+          <RecordsList />
         </ProtectedRoute>
       } />
 
@@ -110,19 +118,19 @@ function AppRoutes() {
 
       <Route path="/records/:id" element={
         <ProtectedRoute>
-          <ComingSoon pageName="Record Details" />
+          <ViewRecord />
         </ProtectedRoute>
       } />
 
       <Route path="/shared-records" element={
         <ProtectedRoute>
-          <ComingSoon pageName="Shared Records" />
+          <AccessRequests />
         </ProtectedRoute>
       } />
 
       <Route path="/users" element={
         <ProtectedRoute>
-          <ComingSoon pageName="User Management" />
+          <UserManagement />
         </ProtectedRoute>
       } />
 

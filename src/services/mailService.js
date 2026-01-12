@@ -8,8 +8,8 @@
 import { Resend } from 'resend'
 import dotenv from 'dotenv'
 
-// SMTP support (commented out - uncomment if you need SMTP instead of Resend)
-// import nodemailer from 'nodemailer'
+// SMTP support - ENABLED FOR LOCAL DEV
+import nodemailer from 'nodemailer'
 
 dotenv.config()
 
@@ -20,17 +20,19 @@ const isSmtpConfigured = () => !!process.env.SMTP_HOST && !!process.env.SMTP_USE
 let resendClient = null
 let transporter = null
 
-// Initialize Resend if API key is provided
+// DEPLOYMENT: Initialize Resend if API key is provided (COMMENTED FOR LOCAL DEV)
+/*
 if (isResendConfigured()) {
   resendClient = new Resend(process.env.RESEND_API_KEY)
   console.log('📧 Email configured: Resend SDK')
 }
-// SMTP Configuration (commented - uncomment to use SMTP)
-/*
-else if (isSmtpConfigured()) {
+*/
+
+// LOCAL DEV: SMTP Configuration (ENABLED)
+if (isSmtpConfigured()) {
   const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
   const isSecure = smtpPort === 465;
-  
+
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: smtpPort,
@@ -46,10 +48,9 @@ else if (isSmtpConfigured()) {
       rejectUnauthorized: false,
     },
   })
-  
+
   console.log(`📧 Email configured: SMTP ${process.env.SMTP_HOST}:${smtpPort}`)
 }
-*/
 else {
   console.log('⚠️  No email service configured - OTPs will be logged to console')
 }
@@ -82,8 +83,7 @@ export const sendMail = async ({ to, subject, text, html }) => {
     }
   }
 
-  // Method 2: SMTP/Nodemailer (commented - uncomment if using SMTP)
-  /*
+  // Method 2: SMTP/Nodemailer - ENABLED FOR LOCAL DEV
   if (transporter) {
     try {
       const info = await transporter.sendMail({ from, to, subject, text, html })
@@ -97,7 +97,6 @@ export const sendMail = async ({ to, subject, text, html }) => {
       throw error
     }
   }
-  */
 
   // Method 3: Development mode - log to console
   console.log('\n' + '='.repeat(60))
@@ -124,8 +123,7 @@ export const verifySMTP = async () => {
     return { configured: true, ok: true, method: 'resend' }
   }
 
-  // SMTP verify (commented - uncomment if using SMTP)
-  /*
+  // SMTP verify - ENABLED FOR LOCAL DEV
   if (transporter) {
     try {
       await transporter.verify()
@@ -134,7 +132,6 @@ export const verifySMTP = async () => {
       return { configured: true, ok: false, method: 'smtp', error: error.message }
     }
   }
-  */
 
   return { configured: false }
 }

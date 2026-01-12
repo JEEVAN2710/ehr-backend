@@ -46,11 +46,11 @@ const NotificationPanel = ({ requests, loading, onApprove, onDeny, onClose }) =>
                             </div>
                             <div className="requester-info">
                                 <h4>
-                                    {request.requester.firstName} {request.requester.lastName}
+                                    {request.requesterId?.firstName || 'Unknown'} {request.requesterId?.lastName || 'User'}
                                 </h4>
                                 <p className="requester-role">
-                                    {request.requester.role === 'doctor' ? 'Doctor' : 'Lab Assistant'}
-                                    {request.requester.specialization && ` • ${request.requester.specialization}`}
+                                    {request.requesterId?.role === 'doctor' ? 'Doctor' : 'Lab Assistant'}
+                                    {request.requesterId?.specialization && ` • ${request.requesterId.specialization}`}
                                 </p>
                             </div>
                         </div>

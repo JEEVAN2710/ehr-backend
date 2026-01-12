@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import app from './src/app.js';
 import connectDB from './src/config/db.js';
-import { verifySmtpConnection } from './src/services/emailService.js';
+import { verifySMTP } from './src/services/mailService.js';
 
 dotenv.config();
 
@@ -15,7 +15,12 @@ async function startServer() {
 
     // 2. Verify SMTP connection
     console.log('\n🔍 Verifying SMTP connection...');
-    await verifySmtpConnection();
+    const smtpStatus = await verifySMTP();
+    if (smtpStatus.configured && smtpStatus.ok) {
+      console.log(`✅ Email service ready: ${smtpStatus.method}`);
+    } else if (smtpStatus.configured && !smtpStatus.ok) {
+      console.warn(`⚠️  Email configured but verification failed: ${smtpStatus.error}`);
+    }
     console.log('');
 
     // 3. Start server

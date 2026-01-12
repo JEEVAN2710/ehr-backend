@@ -47,9 +47,6 @@ export const API_ENDPOINTS = {
     HEALTH_CHECK: '/api/health'
 };
 
-// API base URL
-export const API_BASE_URL = 'http://localhost:4000';
-
 // Password requirements
 export const PASSWORD_REQUIREMENTS = {
     minLength: 8,

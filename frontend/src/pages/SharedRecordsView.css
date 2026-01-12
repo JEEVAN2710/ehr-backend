@@ -1,0 +1,235 @@
+.shared-records-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    padding: 2rem 1rem;
+}
+
+.shared-view-loading,
+.shared-view-error {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.error-content {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.error-content svg {
+    margin-bottom: 1rem;
+}
+
+.error-content h2 {
+    margin: 0 0 0.5rem 0;
+}
+
+.error-content p {
+    margin: 0 0 1.5rem 0;
+    color: var(--color-text-secondary);
+}
+
+.shared-header {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+}
+
+.shared-branding {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    color: white;
+}
+
+.shared-branding h1 {
+    margin: 0;
+    font-size: 1.75rem;
+}
+
+.patient-info-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: white;
+}
+
+.patient-info-card h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+}
+
+.patient-info-card p {
+    margin: 0.25rem 0;
+}
+
+.patient-email {
+    opacity: 0.8;
+    font-size: 0.9375rem;
+}
+
+.share-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.share-meta .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.expiring-soon {
+    color: var(--color-warning);
+    font-weight: 500;
+}
+
+.records-header {
+    max-width: 1200px;
+    margin: 2rem auto 1rem auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.records-header h2 {
+    margin: 0;
+}
+
+.read-only-notice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    opacity: 0.7;
+    font-size: 0.875rem;
+}
+
+.records-grid {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.record-card {
+    cursor: default;
+}
+
+.record-card-content {
+    padding: 1.5rem;
+}
+
+.record-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.record-icon {
+    color: var(--color-primary);
+}
+
+.record-type-badge {
+    padding: 0.25rem 0.75rem;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.record-title {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.125rem;
+}
+
+.record-description {
+    margin: 0 0 1rem 0;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    font-size: 0.9375rem;
+}
+
+.record-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.record-meta .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.files-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 1rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.empty-state svg {
+    color: var(--color-text-secondary);
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-state p {
+    margin: 0;
+    color: var(--color-text-secondary);
+}
+
+.shared-footer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .records-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .records-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}

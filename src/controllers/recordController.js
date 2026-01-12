@@ -1,6 +1,8 @@
 import { validationResult } from 'express-validator';
+import crypto from 'crypto';
 import { MedicalRecord } from '../models/MedicalRecord.js';
 import { User } from '../models/User.js';
+import { ShareToken } from '../models/ShareToken.js';
 import { validatePagination } from '../utils/validators.js';
 
 export const createRecord = async (req, res) => {
@@ -63,34 +65,48 @@ export const createRecord = async (req, res) => {
 export const getPatientRecords = async (req, res) => {
   try {
     const { patientId } = req.params;
-    const { skip: rawSkip = 0, limit: rawLimit = 10 } = req.query;
+    const { skip: rawSkip = 0, limit: rawLimit = 10, createdBy } = req.query;
 
     // Validate pagination
     const { skip, limit } = validatePagination(rawSkip, rawLimit);
 
-    const patient = await User.findById(patientId);
-    if (!patient) {
-      return res.status(404).json({
-        success: false,
-        message: 'Patient not found',
-      });
+    // Build query based on filters
+    let query = {};
+
+    // Special route /my-records - get records created by current user
+    if (patientId === 'my-records') {
+      query.createdBy = req.user._id;
+    } else if (createdBy) {
+      // If createdBy is specified, filter by creator (for doctor's dashboard)
+      query.createdBy = createdBy;
+    } else {
+      // Otherwise, filter by patient (normal flow)
+      const patient = await User.findById(patientId);
+      if (!patient) {
+        return res.status(404).json({
+          success: false,
+          message: 'Patient not found',
+        });
+      }
+
+      if (req.user.role === 'patient' && req.user._id.toString() !== patientId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Patients can only view their own records',
+        });
+      }
+
+      query.patientId = patientId;
     }
 
-    if (req.user.role === 'patient' && req.user._id.toString() !== patientId) {
-      return res.status(403).json({
-        success: false,
-        message: 'Patients can only view their own records',
-      });
-    }
-
-    const records = await MedicalRecord.find({ patientId })
+    const records = await MedicalRecord.find(query)
       .populate('patientId', 'firstName lastName email')
       .populate('createdBy', 'firstName lastName email role')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await MedicalRecord.countDocuments({ patientId });
+    const total = await MedicalRecord.countDocuments(query);
 
     return res.status(200).json({
       success: true,
@@ -481,6 +497,128 @@ export const getSharedRecords = async (req, res) => {
   }
 };
 
+/**
+ * Generate a share token for all patient records
+ */
+export const generateShareAllToken = async (req, res) => {
+  try {
+    const { duration = '24h' } = req.body;
+    const patientId = req.user._id;
+
+    // Only patients can share their own records
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only patients can share their records',
+      });
+    }
+
+    // Calculate expiration time
+    let expirationMs;
+    switch (duration) {
+      case '4h':
+        expirationMs = 4 * 60 * 60 * 1000;
+        break;
+      case '24h':
+        expirationMs = 24 * 60 * 60 * 1000;
+        break;
+      case '7d':
+        expirationMs = 7 * 24 * 60 * 60 * 1000;
+        break;
+      default:
+        expirationMs = 24 * 60 * 60 * 1000;
+    }
+
+    const expiresAt = new Date(Date.now() + expirationMs);
+
+    // Generate secure random token
+    const tokenString = crypto.randomBytes(32).toString('base64url');
+
+    // Create share token
+    const shareToken = new ShareToken({
+      token: tokenString,
+      patientId,
+      type: 'all',
+      expiresAt,
+    });
+
+    await shareToken.save();
+
+    return res.status(201).json({
+      success: true,
+      message: 'Share token generated successfully',
+      data: {
+        token: tokenString,
+        expiresAt,
+        shareLink: `${req.protocol}://${req.get('host')}/shared/all/${tokenString}`,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate share token',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+    });
+  }
+};
+
+/**
+ * Get records by share token (public endpoint)
+ */
+export const getRecordsByShareToken = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Find and validate token
+    const shareToken = await ShareToken.findOne({ token }).populate('patientId', 'firstName lastName email');
+
+    if (!shareToken) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invalid share link',
+      });
+    }
+
+    // Check if token is expired
+    if (!shareToken.isValid()) {
+      return res.status(401).json({
+        success: false,
+        message: 'Share link has expired',
+        expiresAt: shareToken.expiresAt,
+      });
+    }
+
+    // Record access
+    await shareToken.recordAccess();
+
+    // Get all records for the patient
+    const records = await MedicalRecord.find({ patientId: shareToken.patientId._id })
+      .populate('createdBy', 'firstName lastName email role')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Records retrieved successfully',
+      data: {
+        patient: {
+          firstName: shareToken.patientId.firstName,
+          lastName: shareToken.patientId.lastName,
+          email: shareToken.patientId.email,
+        },
+        records,
+        expiresAt: shareToken.expiresAt,
+        accessCount: shareToken.accessCount,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve records',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+    });
+  }
+};
+
 export default {
   createRecord,
   getPatientRecords,
@@ -491,4 +629,6 @@ export default {
   shareRecord,
   revokeRecordSharing,
   getSharedRecords,
+  generateShareAllToken,
+  getRecordsByShareToken,
 };

@@ -12,6 +12,7 @@ import {
   updateUserStatus,
   forgotPassword,
   updateUser,
+  verifyPatientEmail,
 } from '../controllers/authController.js';
 import rateLimit from 'express-rate-limit';
 import authenticateToken from '../middleware/auth.js';
@@ -22,13 +23,13 @@ const router = express.Router();
 // Rate limiters
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15,
+  max: 50,
   message: 'Too many login attempts, please try again later',
 });
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3,
+  max: 50,
   message: 'Too many registration attempts from this IP, please try again later',
 });
 
@@ -135,6 +136,14 @@ router.put(
       .withMessage('New password must contain at least one special character'),
   ],
   changePassword
+);
+
+// Verify patient email - for doctors and lab assistants
+router.get(
+  '/verify-patient',
+  authenticateToken,
+  authorizeRoles('doctor', 'labassistant'),
+  verifyPatientEmail
 );
 
 // Get all users (admin only)

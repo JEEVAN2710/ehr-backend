@@ -1,6 +1,6 @@
 // Test Email Route - For SMTP Verification
 import express from 'express';
-import { sendTestEmail } from '../services/emailService.js';
+import { sendMail } from '../services/mailService.js';
 
 const router = express.Router();
 
@@ -9,13 +9,24 @@ router.get('/test-email', async (req, res) => {
     try {
         console.log('\n📧 Test email requested...');
 
-        const result = await sendTestEmail();
+        const testEmail = process.env.SMTP_USER || 'test@example.com';
+        const result = await sendMail({
+            to: testEmail,
+            subject: 'EHR System - SMTP Test Email',
+            text: 'This is a test email from your EHR backend.\n\nIf you received this, Gmail SMTP is working correctly!\n\nTimestamp: ' + new Date().toISOString(),
+            html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>EHR System Test Email</h2>
+                <p>This is a test email from your EHR backend.</p>
+                <p><strong>If you received this, Gmail SMTP is working correctly!</strong></p>
+                <p style="color: #666; font-size: 12px;">Timestamp: ${new Date().toISOString()}</p>
+            </div>`
+        });
 
         res.status(200).json({
             success: true,
             message: 'Test email sent successfully! Check your inbox.',
             messageId: result.messageId,
-            sentTo: process.env.GMAIL_USER,
+            sentTo: testEmail,
         });
     } catch (error) {
         console.error('Test email failed:', error.message);
@@ -24,7 +35,6 @@ router.get('/test-email', async (req, res) => {
             success: false,
             message: 'Failed to send test email',
             error: error.message,
-            hint: 'Check Render logs for detailed error information',
         });
     }
 });

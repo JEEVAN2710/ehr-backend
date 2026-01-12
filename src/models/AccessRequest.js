@@ -15,7 +15,7 @@ const accessRequestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'denied'],
+        enum: ['pending', 'approved', 'denied', 'revoked'],
         default: 'pending',
         index: true,
     },
@@ -30,6 +30,10 @@ const accessRequestSchema = new mongoose.Schema({
         index: true,
     },
     respondedAt: {
+        type: Date,
+        default: null,
+    },
+    revokedAt: {
         type: Date,
         default: null,
     },

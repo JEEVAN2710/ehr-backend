@@ -4,6 +4,8 @@ import {
     requestAccess,
     getPendingRequests,
     respondToRequest,
+    revokeAccess,
+    getGrantedAccess,
     getMyRequests,
 } from '../controllers/accessRequestController.js';
 import authenticateToken from '../middleware/auth.js';
@@ -41,6 +43,24 @@ router.put(
         body('action').isIn(['approve', 'deny']).withMessage('Action must be either approve or deny'),
     ],
     respondToRequest
+);
+
+// Patient revokes granted access
+router.put(
+    '/:requestId/revoke',
+    authorizeRoles('patient'),
+    [
+        param('requestId').isMongoId().withMessage('Valid request ID is required'),
+        body('timing').optional().isIn(['immediate', '4h', '8h']).withMessage('Timing must be immediate, 4h, or 8h'),
+    ],
+    revokeAccess
+);
+
+// Patient views who they granted access to
+router.get(
+    '/granted-access',
+    authorizeRoles('patient'),
+    getGrantedAccess
 );
 
 // Doctor/Lab assistant views their sent requests

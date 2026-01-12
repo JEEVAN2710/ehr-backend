@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
 import Button from './Button';
+import api from '../services/api';
 import { QRCodeSVG } from 'qrcode.react';
 import { Clock, Share2, Copy, Check } from 'lucide-react';
 import './ShareAllModal.css';
@@ -9,6 +10,8 @@ const ShareAllModal = ({ isOpen, onClose, patientId }) => {
     const [duration, setDuration] = useState('24h');
     const [shareLink, setShareLink] = useState('');
     const [copied, setCopied] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const durations = [
         { value: '4h', label: '4 Hours' },
@@ -16,29 +19,18 @@ const ShareAllModal = ({ isOpen, onClose, patientId }) => {
         { value: '7d', label: '7 Days' }
     ];
 
-    const generateShareLink = () => {
-        const now = new Date();
-        let expiryTime;
+    const generateShareLink = async () => {
+        try {
+            setLoading(true);
+            setError('');
 
-        switch (duration) {
-            case '4h':
-                expiryTime = new Date(now.getTime() + 4 * 60 * 60 * 1000);
-                break;
-            case '24h':
-                expiryTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-                break;
-            case '7d':
-                expiryTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-                break;
-            default:
-                expiryTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            const response = await api.generateShareAllToken(duration);
+            setShareLink(response.data.shareLink);
+        } catch (err) {
+            setError(err.message || 'Failed to generate share link');
+        } finally {
+            setLoading(false);
         }
-
-        // Generate shareable link for all records
-        const token = btoa(`all-records-${patientId}-${expiryTime.getTime()}-${Math.random()}`);
-        const link = `${window.location.origin}/shared/all/${token}`;
-
-        setShareLink(link);
     };
 
     const handleCopyLink = () => {
@@ -51,6 +43,7 @@ const ShareAllModal = ({ isOpen, onClose, patientId }) => {
         setShareLink('');
         setCopied(false);
         setDuration('24h');
+        setError('');
         onClose();
     };
 
@@ -65,6 +58,12 @@ const ShareAllModal = ({ isOpen, onClose, patientId }) => {
                 <div className="info-banner">
                     <p>Generate a QR code to share all your medical records with doctors or lab assistants</p>
                 </div>
+
+                {error && (
+                    <div className="error-banner">
+                        <p>{error}</p>
+                    </div>
+                )}
 
                 <div className="duration-section">
                     <label className="section-label">
@@ -90,8 +89,10 @@ const ShareAllModal = ({ isOpen, onClose, patientId }) => {
                         fullWidth
                         icon={<Share2 size={18} />}
                         onClick={generateShareLink}
+                        loading={loading}
+                        disabled={loading}
                     >
-                        Generate QR Code
+                        {loading ? 'Generating...' : 'Generate QR Code'}
                     </Button>
                 ) : (
                     <div className="share-result">
