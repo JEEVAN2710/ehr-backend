@@ -12,7 +12,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '', // Can be email or phone
     password: ''
   });
   const [errors, setErrors] = useState({});
@@ -37,10 +37,8 @@ const Login = () => {
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Invalid email format';
+    if (!formData.identifier) {
+      newErrors.identifier = 'Email or phone number is required';
     }
 
     if (!formData.password) {
@@ -60,7 +58,19 @@ const Login = () => {
     setServerError('');
 
     try {
-      await login(formData.email, formData.password);
+      // Determine if identifier is email or phone
+      const isEmail = validateEmail(formData.identifier);
+      const loginData = {
+        password: formData.password
+      };
+
+      if (isEmail) {
+        loginData.email = formData.identifier;
+      } else {
+        loginData.phoneNumber = formData.identifier;
+      }
+
+      await login(loginData.email || loginData.phoneNumber, formData.password, !isEmail);
       navigate('/dashboard');
     } catch (error) {
       setServerError(error.message || 'Login failed. Please check your credentials.');
@@ -122,14 +132,14 @@ const Login = () => {
           )}
 
           <Input
-            label="Email Address"
-            type="email"
-            name="email"
-            value={formData.email}
+            label="Email or Phone Number"
+            type="text"
+            name="identifier"
+            value={formData.identifier}
             onChange={handleChange}
-            placeholder="your.email@example.com"
+            placeholder="your.email@example.com or +1234567890"
             icon={<Mail size={18} />}
-            error={errors.email}
+            error={errors.identifier}
             required
           />
 

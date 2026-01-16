@@ -7,6 +7,7 @@ import {
   login,
   refreshToken,
   getProfile,
+  updateProfile,
   changePassword,
   getAllUsers,
   updateUserStatus,
@@ -17,6 +18,7 @@ import {
 import rateLimit from 'express-rate-limit';
 import authenticateToken from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
+
 
 const router = express.Router();
 
@@ -59,8 +61,8 @@ router.post(
       .matches(/[!@#$%^&*(),.?":{}|<>]/)
       .withMessage('Password must contain at least one special character'),
     body('role').optional().isIn(['patient', 'doctor', 'labassistant']).withMessage('Invalid role'),
-    body('phoneNumber').optional().isMobilePhone().withMessage('Invalid phone number'),
-    body('dateOfBirth').optional().isISO8601().withMessage('Invalid date format'),
+    body('phoneNumber').notEmpty().withMessage('Phone number is required').isMobilePhone().withMessage('Invalid phone number'),
+    body('dateOfBirth').notEmpty().withMessage('Date of birth is required').isISO8601().withMessage('Invalid date format'),
   ],
   register
 );
@@ -101,7 +103,8 @@ router.post(
   '/login',
   loginLimiter,
   [
-    body('email').isEmail().withMessage('Valid email is required'),
+    body('email').optional().isEmail().withMessage('Valid email is required'),
+    body('phoneNumber').optional().isMobilePhone().withMessage('Valid phone number is required'),
     body('password').notEmpty().withMessage('Password is required'),
   ],
   login
@@ -116,6 +119,17 @@ router.post(
 
 // Get current user profile (authenticated)
 router.get('/profile', authenticateToken, getProfile);
+
+// Update current user profile (authenticated)
+router.put(
+  '/profile',
+  authenticateToken,
+  [
+    body('phoneNumber').optional().isMobilePhone().withMessage('Invalid phone number'),
+    body('dateOfBirth').optional().isISO8601().withMessage('Invalid date format'),
+  ],
+  updateProfile
+);
 
 // Change password (authenticated)
 router.put(
@@ -138,7 +152,7 @@ router.put(
   changePassword
 );
 
-// Verify patient email - for doctors and lab assistants
+// Verify patient - for doctors and lab assistants
 router.get(
   '/verify-patient',
   authenticateToken,

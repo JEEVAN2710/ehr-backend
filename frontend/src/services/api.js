@@ -204,11 +204,18 @@ const api = {
     },
 
     // Login
-    login: async (email, password) => {
+    login: async (identifier, password, isPhone = false) => {
+        const body = { password };
+        if (isPhone) {
+            body.phoneNumber = identifier;
+        } else {
+            body.email = identifier;
+        }
+
         const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify(body)
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -237,6 +244,22 @@ const api = {
             success: true,
             data: { user: currentUser }
         };
+    },
+
+    // Update Profile
+    updateProfile: async (profileData) => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(profileData)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data;
     },
 
     // Change Password
@@ -751,10 +774,14 @@ const api = {
     getUsers: async (params = {}) => {
         const token = tokenManager.getAccessToken();
 
-        // Special case: If searching for a patient by email (for CreateRecord)
+        // Special case: If searching for a patient by email OR phone (for CreateRecord)
         // use the verify-patient endpoint instead (accessible by doctors/lab assistants)
-        if (params.email && params.role === 'patient') {
-            const response = await fetch(`${API_BASE_URL}/api/auth/verify-patient?email=${encodeURIComponent(params.email)}`, {
+        if (params.role === 'patient' && (params.email || params.phoneNumber)) {
+            const queryParams = new URLSearchParams();
+            if (params.email) queryParams.append('email', params.email);
+            if (params.phoneNumber) queryParams.append('phoneNumber', params.phoneNumber);
+
+            const response = await fetch(`${API_BASE_URL}/api/auth/verify-patient?${queryParams.toString()}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();

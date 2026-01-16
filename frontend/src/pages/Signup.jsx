@@ -34,6 +34,7 @@ const Signup = () => {
     phoneNumber: '',
     dateOfBirth: ''
   });
+  const [phoneConfirmed, setPhoneConfirmed] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -70,8 +71,14 @@ const Signup = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (formData.phoneNumber && !validatePhone(formData.phoneNumber)) {
+    if (!formData.phoneNumber) {
+      newErrors.phoneNumber = 'Phone number is required';
+    } else if (!validatePhone(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Invalid phone number format';
+    }
+
+    if (!phoneConfirmed) {
+      newErrors.phoneConfirmed = 'Please confirm your phone number is correct';
     }
 
     if (!formData.dateOfBirth) {
@@ -252,7 +259,32 @@ const Signup = () => {
               placeholder="+1234567890"
               icon={<Phone size={18} />}
               error={errors.phoneNumber}
+              required
             />
+
+            <div style={{ marginTop: '-8px', marginBottom: 'var(--spacing-md)' }}>
+              <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={phoneConfirmed}
+                  onChange={(e) => {
+                    setPhoneConfirmed(e.target.checked);
+                    if (errors.phoneConfirmed) {
+                      setErrors(prev => ({ ...prev, phoneConfirmed: '' }));
+                    }
+                  }}
+                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                />
+                <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                  I confirm this is my correct phone number
+                </span>
+              </label>
+              {errors.phoneConfirmed && (
+                <div style={{ color: 'var(--color-error)', fontSize: '12px', marginTop: '4px', marginLeft: '24px' }}>
+                  {errors.phoneConfirmed}
+                </div>
+              )}
+            </div>
 
             <Input
               label="Date of Birth"

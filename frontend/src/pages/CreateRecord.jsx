@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import FileUpload from '../components/FileUpload';
-import { Mail, FileText, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, Phone, FileText, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react';
 import { RECORD_TYPES } from '../utils/constants';
 import './CreateRecord.css';
 
@@ -16,6 +16,8 @@ const CreateRecord = () => {
 
     const [formData, setFormData] = useState({
         patientEmail: '',
+        patientPhone: '',
+        searchByPhone: false,
         title: '',
         description: '',
         recordType: 'other'
@@ -25,8 +27,8 @@ const CreateRecord = () => {
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [verifyingEmail, setVerifyingEmail] = useState(false);
-    const [emailVerified, setEmailVerified] = useState(false);
+    const [verifyingPatient, setVerifyingPatient] = useState(false);
+    const [emailVerified, setEmailVerified] = useState(false); // Keeps name for compatibility but means "patient verified"
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -34,36 +36,68 @@ const CreateRecord = () => {
         setError('');
     };
 
-    const handleVerifyEmail = async (e) => {
+    const handleVerifyPatient = async (e) => {
         e.preventDefault();
 
-        if (!formData.patientEmail) {
+        if (!formData.searchByPhone && !formData.patientEmail) {
             setError('Please enter patient email');
             return;
         }
 
+        if (formData.searchByPhone && !formData.patientPhone) {
+            setError('Please enter patient phone number');
+            return;
+        }
+
         try {
-            setVerifyingEmail(true);
+            setVerifyingPatient(true);
             setError('');
 
-            // Find patient by email
-            const response = await api.getUsers({ email: formData.patientEmail, role: 'patient' });
-
-            if (!response.data.users || response.data.users.length === 0) {
-                throw new Error('Patient not found with this email');
+            // Find patient by email or phone
+            const params = { role: 'patient' };
+            if (formData.searchByPhone) {
+                params.phoneNumber = formData.patientPhone;
+            } else {
+                params.email = formData.patientEmail;
             }
 
-            const patient = response.data.users[0];
+            const response = await api.getUsers(params);
+
+            // API returns { success: true, message: 'Patient found', data: { user: patient } }
+            // or standard getUsers checks
+
+            // NOTE: The backend endpoint might have changed structure. 
+            // If using verifyPatientEmail endpoint (now verifyPatient): response.data.data.user
+            // If using getAllUsers endpoint: response.data.data.users[0]
+
+            // Let's assume we are using the updated verifyPatientEmail endpoint which returns a single user in data.user
+            // However, the previous code used api.getUsers which might map to getAllUsers
+            // Let's check api.js to be sure, but assuming standard response pattern:
+
+            let patient;
+            if (response.data.data && response.data.data.user) {
+                patient = response.data.data.user;
+            } else if (response.data.users && response.data.users.length > 0) {
+                patient = response.data.users[0];
+            } else if (response.data.data && response.data.data.users && response.data.data.users.length > 0) {
+                patient = response.data.data.users[0];
+            }
+
+            if (!patient) {
+                throw new Error('Patient not found');
+            }
+
             setPatientId(patient._id);
             setPatientInfo(patient);
             setEmailVerified(true);
         } catch (err) {
-            setError(err.message || 'Failed to verify patient email');
+            console.error(err);
+            setError(err.response?.data?.message || err.message || 'Failed to verify patient');
             setEmailVerified(false);
             setPatientId(null);
             setPatientInfo(null);
         } finally {
-            setVerifyingEmail(false);
+            setVerifyingPatient(false);
         }
     };
 
@@ -163,29 +197,64 @@ const CreateRecord = () => {
                     </div>
                 )}
 
-                {/* Step 1: Verify Patient Email */}
+                {/* Step 1: Verify Patient */}
                 <div className="form-section">
                     <h3>Step 1: Find Patient</h3>
-                    <form onSubmit={handleVerifyEmail}>
+
+                    <div className="search-mode-toggle">
+                        <button
+                            type="button"
+                            className={`toggle-btn ${!formData.searchByPhone ? 'active' : ''}`}
+                            onClick={() => setFormData(prev => ({ ...prev, searchByPhone: false, patientPhone: '', error: '' }))}
+                            disabled={emailVerified}
+                        >
+                            Search by Email
+                        </button>
+                        <button
+                            type="button"
+                            className={`toggle-btn ${formData.searchByPhone ? 'active' : ''}`}
+                            onClick={() => setFormData(prev => ({ ...prev, searchByPhone: true, patientEmail: '', error: '' }))}
+                            disabled={emailVerified}
+                        >
+                            Search by Phone
+                        </button>
+                    </div>
+
+                    <form onSubmit={handleVerifyPatient}>
                         <div className="email-verify-group">
-                            <Input
-                                label="Patient Email Address"
-                                type="email"
-                                name="patientEmail"
-                                value={formData.patientEmail}
-                                onChange={handleChange}
-                                placeholder="patient@example.com"
-                                icon={<Mail size={18} />}
-                                required
-                                disabled={emailVerified}
-                            />
+                            {!formData.searchByPhone ? (
+                                <Input
+                                    label="Patient Email Address"
+                                    type="email"
+                                    name="patientEmail"
+                                    value={formData.patientEmail}
+                                    onChange={handleChange}
+                                    placeholder="patient@example.com"
+                                    icon={<Mail size={18} />}
+                                    required={!formData.searchByPhone}
+                                    disabled={emailVerified}
+                                />
+                            ) : (
+                                <Input
+                                    label="Patient Phone Number"
+                                    type="tel"
+                                    name="patientPhone"
+                                    value={formData.patientPhone}
+                                    onChange={handleChange}
+                                    placeholder="+1234567890"
+                                    icon={<Phone size={18} />}
+                                    required={formData.searchByPhone}
+                                    disabled={emailVerified}
+                                />
+                            )}
+
                             <Button
                                 type="submit"
                                 variant={emailVerified ? 'success' : 'primary'}
-                                loading={verifyingEmail}
+                                loading={verifyingPatient}
                                 disabled={emailVerified}
                             >
-                                {emailVerified ? 'Verified ✓' : verifyingEmail ? 'Verifying...' : 'Verify Email'}
+                                {emailVerified ? 'Verified ✓' : verifyingPatient ? 'Verifying...' : 'Verify Patient'}
                             </Button>
                         </div>
                     </form>
@@ -196,7 +265,10 @@ const CreateRecord = () => {
                             <div>
                                 <p><strong>Patient Found:</strong></p>
                                 <p>{patientInfo.firstName} {patientInfo.lastName}</p>
-                                <p className="small-text">{patientInfo.email}</p>
+                                <p className="small-text">
+                                    {patientInfo.email}
+                                    {patientInfo.phoneNumber && ` • ${patientInfo.phoneNumber}`}
+                                </p>
                             </div>
                         </div>
                     )}

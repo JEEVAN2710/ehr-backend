@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import ShareAllModal from '../components/ShareAllModal';
-import { Lock, AlertCircle, CheckCircle, Share2 } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle, Share2, Edit2, Phone, Calendar } from 'lucide-react';
 import { validatePassword, getPasswordStrength } from '../utils/utils';
 import { formatDate, formatRole } from '../utils/utils';
 import { USER_ROLES } from '../utils/constants';
@@ -17,15 +17,23 @@ const Profile = () => {
     const navigate = useNavigate();
     const [showChangePassword, setShowChangePassword] = useState(false);
     const [showShareAllModal, setShowShareAllModal] = useState(false);
+    const [showEditProfile, setShowEditProfile] = useState(false);
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
     });
+    const [profileData, setProfileData] = useState({
+        phoneNumber: user?.phoneNumber || '',
+        dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : ''
+    });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
+    const [profileLoading, setProfileLoading] = useState(false);
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
+    const [profileSuccess, setProfileSuccess] = useState('');
+    const [profileError, setProfileError] = useState('');
 
     const handlePasswordChange = (e) => {
         const { name, value } = e.target;
@@ -80,6 +88,36 @@ const Profile = () => {
         }
     };
 
+    const handleProfileChange = (e) => {
+        const { name, value } = e.target;
+        setProfileData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+        setProfileError('');
+    };
+
+    const handleProfileSubmit = async (e) => {
+        e.preventDefault();
+        setProfileLoading(true);
+        setProfileError('');
+        setProfileSuccess('');
+
+        try {
+            const response = await api.updateProfile(profileData);
+            updateUser(response.data.user);
+            setProfileSuccess('Profile updated successfully!');
+            setTimeout(() => {
+                setShowEditProfile(false);
+                setProfileSuccess('');
+            }, 2000);
+        } catch (err) {
+            setProfileError(err.message || 'Failed to update profile');
+        } finally {
+            setProfileLoading(false);
+        }
+    };
+
     const passwordStrength = passwordData.newPassword ? getPasswordStrength(passwordData.newPassword) : null;
     const passwordValidation = validatePassword(passwordData.newPassword);
 
@@ -102,24 +140,100 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    <div className="profile-info">
-                        <div className="info-row">
-                            <span className="info-label">Email</span>
-                            <span className="info-value">{user?.email}</span>
-                        </div>
-                        <div className="info-row">
-                            <span className="info-label">Phone</span>
-                            <span className="info-value">{user?.phoneNumber || 'Not provided'}</span>
-                        </div>
-                        <div className="info-row">
-                            <span className="info-label">Date of Birth</span>
-                            <span className="info-value">{user?.dateOfBirth ? formatDate(user.dateOfBirth) : 'Not provided'}</span>
-                        </div>
-                        <div className="info-row">
-                            <span className="info-label">Account Created</span>
-                            <span className="info-value">{formatDate(user?.createdAt)}</span>
-                        </div>
-                    </div>
+                    {!showEditProfile ? (
+                        <>
+                            <div className="profile-info">
+                                <div className="info-row">
+                                    <span className="info-label">Email</span>
+                                    <span className="info-value">{user?.email}</span>
+                                </div>
+                                <div className="info-row">
+                                    <span className="info-label">Phone</span>
+                                    <span className="info-value">{user?.phoneNumber || 'Not provided'}</span>
+                                </div>
+                                <div className="info-row">
+                                    <span className="info-label">Date of Birth</span>
+                                    <span className="info-value">{user?.dateOfBirth ? formatDate(user.dateOfBirth) : 'Not provided'}</span>
+                                </div>
+                                <div className="info-row">
+                                    <span className="info-label">Account Created</span>
+                                    <span className="info-value">{formatDate(user?.createdAt)}</span>
+                                </div>
+                            </div>
+                            <div style={{ marginTop: 'var(--spacing-lg)', paddingTop: 'var(--spacing-lg)', borderTop: '1px solid var(--color-border)' }}>
+                                <Button
+                                    variant="secondary"
+                                    icon={<Edit2 size={18} />}
+                                    onClick={() => setShowEditProfile(true)}
+                                >
+                                    Edit Profile
+                                </Button>
+                            </div>
+                        </>
+                    ) : (
+                        <form onSubmit={handleProfileSubmit} style={{ padding: 'var(--spacing-lg)' }}>
+                            {profileError && (
+                                <div className="error-alert">
+                                    <AlertCircle size={20} />
+                                    <span>{profileError}</span>
+                                </div>
+                            )}
+
+                            {profileSuccess && (
+                                <div className="success-alert">
+                                    <CheckCircle size={20} />
+                                    <span>{profileSuccess}</span>
+                                </div>
+                            )}
+
+                            <Input
+                                label="Phone Number"
+                                type="tel"
+                                name="phoneNumber"
+                                value={profileData.phoneNumber}
+                                onChange={handleProfileChange}
+                                placeholder="+1234567890"
+                                icon={<Phone size={18} />}
+                                error={errors.phoneNumber}
+                            />
+
+                            <Input
+                                label="Date of Birth"
+                                type="date"
+                                name="dateOfBirth"
+                                value={profileData.dateOfBirth}
+                                onChange={handleProfileChange}
+                                icon={<Calendar size={18} />}
+                                error={errors.dateOfBirth}
+                            />
+
+                            <div className="form-actions">
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    loading={profileLoading}
+                                >
+                                    {profileLoading ? 'Saving...' : 'Save Changes'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setShowEditProfile(false);
+                                        setProfileData({
+                                            phoneNumber: user?.phoneNumber || '',
+                                            dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : ''
+                                        });
+                                        setErrors({});
+                                        setProfileError('');
+                                    }}
+                                    disabled={profileLoading}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </form>
+                    )}
                 </Card>
 
                 {user?.role === USER_ROLES.PATIENT && (

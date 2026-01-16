@@ -32,8 +32,8 @@ export const AuthProvider = ({ children }) => {
         initAuth();
     }, []);
 
-    const login = async (email, password) => {
-        const response = await api.login(email, password);
+    const login = async (identifier, password, isPhone = false) => {
+        const response = await api.login(identifier, password, isPhone);
         const userData = response.data.user;
         setUser(userData);
         storage.set('currentUser', userData);

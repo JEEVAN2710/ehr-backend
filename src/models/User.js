@@ -41,6 +41,15 @@ const userSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
     default: null,
+    sparse: true,
+    unique: true,
+    validate: {
+      validator: function (v) {
+        // Allow null/empty OR valid phone format (simple check for now)
+        return !v || /^\+?[1-9]\d{1,14}$/.test(v);
+      },
+      message: 'Invalid phone number format'
+    }
   },
   dateOfBirth: {
     type: Date,

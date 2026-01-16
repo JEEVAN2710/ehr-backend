@@ -210,14 +210,30 @@ export const login = async (req, res) => {
       });
     }
 
-    const { email, password } = req.body;
+    const { email, phoneNumber, password } = req.body;
 
-    const user = await User.findOne({ email }).select('+password');
+    // User must provide either email or phoneNumber
+    if (!email && !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email or phone number is required',
+      });
+    }
+
+    // Build query to find user by email or phone
+    const query = {};
+    if (email) {
+      query.email = email;
+    } else {
+      query.phoneNumber = phoneNumber;
+    }
+
+    const user = await User.findOne(query).select('+password');
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: 'Invalid credentials',
       });
     }
 
@@ -233,7 +249,7 @@ export const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: 'Invalid credentials',
       });
     }
 
@@ -332,6 +348,66 @@ export const getProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to retrieve profile',
+      error: error.message,
+    });
+  }
+};
+
+// Update current user profile
+export const updateProfile = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array(),
+      });
+    }
+
+    const { phoneNumber, dateOfBirth } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Update phone number if provided
+    if (phoneNumber !== undefined) {
+      // Check if phone is being changed and if it's already in use by another user
+      if (phoneNumber && phoneNumber !== user.phoneNumber) {
+        const existingUser = await User.findOne({ phoneNumber, _id: { $ne: user._id } });
+        if (existingUser) {
+          return res.status(400).json({
+            success: false,
+            message: 'Phone number is already in use by another account',
+          });
+        }
+      }
+      user.phoneNumber = phoneNumber || null;
+    }
+
+    // Update date of birth if provided
+    if (dateOfBirth !== undefined) {
+      user.dateOfBirth = dateOfBirth || null;
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        user: user.toJSON(),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update profile',
       error: error.message,
     });
   }
@@ -608,6 +684,7 @@ export default {
   login,
   refreshToken,
   getProfile,
+  updateProfile,
   changePassword,
   getAllUsers,
   updateUserStatus,
