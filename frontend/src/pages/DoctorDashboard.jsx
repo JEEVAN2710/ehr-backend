@@ -200,10 +200,13 @@ const DoctorDashboard = () => {
                 onAccessRecords={(data) => {
                     console.log('Accessing patient records:', data);
                     // Navigate to patient records page
-                    if (data.patient && data.patient.id) {
-                        navigate(`/records?patientId=${data.patient.id}`);
+                    // Try multiple possible patient ID field locations
+                    const patientId = data.patient?._id || data.patient?.id || data.patientId;
+                    if (patientId) {
+                        navigate(`/records?patientId=${patientId}`);
                     } else {
-                        alert('Patient records accessed successfully!');
+                        console.error('No patient ID found in data:', data);
+                        alert('Unable to navigate to records - patient ID not found');
                     }
                 }}
             />
