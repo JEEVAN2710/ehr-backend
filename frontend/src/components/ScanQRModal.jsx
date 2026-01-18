@@ -20,50 +20,57 @@ const ScanQRModal = ({ isOpen, onClose, onAccessRecords }) => {
             return;
         }
 
-        // Check if it's a valid share link format
-        const linkPattern = /\/shared\/(all\/)?([A-Za-z0-9+/=]+)$/;
-        if (!shareLink.match(linkPattern)) {
+        // Extract token from link - support both full URLs and just tokens
+        // Pattern matches: /shared/all/TOKEN or just TOKEN
+        const linkPattern = /\/shared\/all\/([A-Za-z0-9_-]+)$|^([A-Za-z0-9_-]+)$/;
+        const match = shareLink.match(linkPattern);
+
+        if (!match) {
             setError('Invalid share link format');
             return;
         }
 
+        const token = match[1] || match[2];
         setLoading(true);
 
         try {
-            // Extract token from link
-            const match = shareLink.match(linkPattern);
-            const token = match[2];
+            // Call the backend API to get records using the token
+            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+            const response = await fetch(`${API_BASE_URL}/api/records/shared/all/${token}`);
+            const data = await response.json();
 
-            // Decode token to get info
-            const decoded = atob(token);
-            const parts = decoded.split('-');
-
-            // Check if token has expired
-            const expiryTime = parseInt(parts[parts.length - 2]);
-            if (Date.now() > expiryTime) {
-                setError('This share link has expired');
+            if (!response.ok) {
+                if (response.status === 404) {
+                    setError('Invalid share link');
+                } else if (response.status === 401) {
+                    setError(data.message || 'This share link has expired');
+                } else {
+                    setError(data.message || 'Failed to access records');
+                }
                 setLoading(false);
                 return;
             }
 
-            // Success - notify parent component
+            // Success - notify parent component with actual data from backend
             setSuccess(true);
 
             setTimeout(() => {
                 if (onAccessRecords) {
                     onAccessRecords({
                         token,
-                        isAllRecords: shareLink.includes('/shared/all/'),
-                        patientId: parts[1] || parts[2],
-                        expiryTime: new Date(expiryTime)
+                        isAllRecords: true,
+                        patient: data.data.patient,
+                        records: data.data.records,
+                        expiresAt: data.data.expiresAt,
+                        accessCount: data.data.accessCount
                     });
                 }
                 handleClose();
             }, 1500);
 
         } catch (err) {
+            console.error('Failed to access share link:', err);
             setError('Failed to process share link. Please check and try again.');
-        } finally {
             setLoading(false);
         }
     };
