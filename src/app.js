@@ -56,6 +56,16 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('/api/version', (req, res) => {
+  res.status(200).json({
+    success: true,
+    version: '1.0.1',
+    commit: 'fa80a2c',
+    features: ['my-records-route', 'share-all-fix'],
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/api/mail/test', async (req, res) => {
   const to = req.query.to || process.env.SMTP_USER;
   const name = req.query.name || 'User';
