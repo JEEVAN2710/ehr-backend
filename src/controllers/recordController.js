@@ -67,6 +67,10 @@ export const getPatientRecords = async (req, res) => {
     const { patientId } = req.params;
     const { skip: rawSkip = 0, limit: rawLimit = 10, createdBy } = req.query;
 
+    console.log('[CONTROLLER] getPatientRecords called');
+    console.log('[CONTROLLER] patientId param:', patientId);
+    console.log('[CONTROLLER] User:', req.user?.email, 'ID:', req.user?._id);
+
     // Validate pagination
     const { skip, limit } = validatePagination(rawSkip, rawLimit);
 
@@ -75,7 +79,9 @@ export const getPatientRecords = async (req, res) => {
 
     // Special route /my-records - get records created by current user
     if (patientId === 'my-records') {
+      console.log('[CONTROLLER] MY-RECORDS route detected!');
       query.createdBy = req.user._id;
+      console.log('[CONTROLLER] Query:', JSON.stringify(query));
     } else if (createdBy) {
       // If createdBy is specified, filter by creator (for doctor's dashboard)
       query.createdBy = createdBy;
@@ -83,6 +89,7 @@ export const getPatientRecords = async (req, res) => {
       // Otherwise, filter by patient (normal flow)
       const patient = await User.findById(patientId);
       if (!patient) {
+        console.log('[CONTROLLER] Patient not found for ID:', patientId);
         return res.status(404).json({
           success: false,
           message: 'Patient not found',
