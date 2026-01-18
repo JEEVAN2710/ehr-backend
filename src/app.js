@@ -42,11 +42,24 @@ app.use('/api/', generalLimiter);
 // Public routes (no authentication)
 app.use('/api/records', publicRecordRoutes);
 
+
 app.use('/api/auth', authRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/access-requests', accessRequestRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api', testRoutes); // Test routes
+
+// Debug: List all routes
+console.log('\n=== REGISTERED API ROUTES ===');
+console.log('✓ /api/records/* (authenticated routes)');
+console.log('  - GET /my-records');
+console.log('  - GET /:patientId');
+console.log('  - POST /');
+console.log('✓ /api/records/shared/all/:token (public)');
+console.log('✓ /api/auth/*');
+console.log('✓ /api/access-requests/*');
+console.log('✓ /api/upload/*');
+console.log('=============================\n');
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({

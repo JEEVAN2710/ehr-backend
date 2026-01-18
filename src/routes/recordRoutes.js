@@ -38,6 +38,11 @@ router.post(
 // Get records created by current user (for doctor dashboard)
 router.get(
   '/my-records',
+  (req, res, next) => {
+    console.log('[ROUTE DEBUG] /my-records route matched!');
+    console.log('[ROUTE DEBUG] User:', req.user?.email, 'Role:', req.user?.role);
+    next();
+  },
   authorizeRoles('doctor', 'labassistant'),
   getPatientRecords
 );
