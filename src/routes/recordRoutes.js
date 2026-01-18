@@ -136,7 +136,7 @@ router.post(
 // Public route - Get records by share token (no auth required)
 const publicRouter = express.Router();
 publicRouter.get(
-  '/shared/:token',
+  '/shared/all/:token',
   [param('token').notEmpty().withMessage('Token is required')],
   getRecordsByShareToken
 );
