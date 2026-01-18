@@ -199,8 +199,12 @@ const DoctorDashboard = () => {
                 onClose={() => setScanQRModalOpen(false)}
                 onAccessRecords={(data) => {
                     console.log('Accessing patient records:', data);
-                    // TODO: Navigate to view patient records
-                    alert(`Access granted to patient records! (Token: ${data.token.substring(0, 20)}...)`);
+                    // Navigate to patient records page
+                    if (data.patient && data.patient.id) {
+                        navigate(`/records?patientId=${data.patient.id}`);
+                    } else {
+                        alert('Patient records accessed successfully!');
+                    }
                 }}
             />
 
