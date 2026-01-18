@@ -42,15 +42,17 @@ const AccessRequests = () => {
                 setSharedRecords(sharedRes.data.records || []);
                 setRequestHistory(grantedRes.data.requests || []); // For patients, this shows who they gave access to
             } else {
-                // Doctor/Lab Assistant: Get sent requests and shared records
-                const [sentRes, sharedRes] = await Promise.all([
+                // Doctor/Lab Assistant: Get sent requests, shared records, and share-all links
+                const [sentRes, sharedRes, viaLinksRes] = await Promise.all([
                     api.getMyRequests(),
-                    api.getSharedRecords()
+                    api.getSharedRecords(),
+                    api.getSharedViaLinks()
                 ]);
                 const allRequests = sentRes.data.requests || [];
                 setPendingRequests(allRequests.filter(r => r.status === 'pending'));
                 setRequestHistory(allRequests.filter(r => r.status !== 'pending'));
                 setSharedRecords(sharedRes.data.records || []);
+                setShareViaLinks(viaLinksRes.data || []);
             }
         } catch (err) {
             setError(err.message || 'Failed to load data');
@@ -418,8 +420,68 @@ const AccessRequests = () => {
                 </section>
             )}
 
+            {/* Share-All Links Section (Doctor only) */}
+            {user.role !== 'patient' && shareViaLinks.length > 0 && (
+                <section className="requests-section">
+                    <h2>Shared via QR Code ({shareViaLinks.length})</h2>
+                    <div className="requests-grid">
+                        {shareViaLinks.map((share) => (
+                            <Card key={share.id} className="request-card share-link">
+                                <div className="request-header">
+                                    <div className="requester-info">
+                                        <User size={24} className="requester-icon" />
+                                        <div>
+                                            <h3>{share.patient.firstName} {share.patient.lastName}</h3>
+                                            <p className="patient-email">{share.patient.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="share-badge">
+                                        <FileText size={16} />
+                                        <span>QR Access</span>
+                                    </div>
+                                </div>
+
+                                <div className="access-scope">
+                                    <FileText size={16} />
+                                    <span>All medical records (Temporary QR Access)</span>
+                                </div>
+
+                                <div className="request-meta">
+                                    <div>
+                                        <Calendar size={16} />
+                                        <span>Accessed {new Date(share.sharedAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div>
+                                        <Clock size={16} />
+                                        <span>Expires {new Date(share.expiresAt).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+
+                                <div className="access-meta">
+                                    <div className="access-count">
+                                        <Eye size={16} />
+                                        <span>{share.accessCount} total view{share.accessCount !== 1 ? 's' : ''}</span>
+                                    </div>
+                                </div>
+
+                                <div className="request-action-button">
+                                    <Button
+                                        variant="primary"
+                                        icon={<Eye size={18} />}
+                                        fullWidth
+                                        onClick={() => handleViewRecords(share.patient.id)}
+                                    >
+                                        View Patient Records
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {/* Empty States */}
-            {pendingRequests.length === 0 && sharedRecords.length === 0 && requestHistory.length === 0 && (
+            {pendingRequests.length === 0 && sharedRecords.length === 0 && shareViaLinks.length === 0 && requestHistory.length === 0 && (
                 <Card>
                     <div className="empty-state">
                         <FileText size={48} />

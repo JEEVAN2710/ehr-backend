@@ -585,6 +585,17 @@ const api = {
         return data;
     },
 
+    // Get share-all links accessed by doctor (for Shared with Me)
+    getSharedViaLinks: async () => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/records/shared-via-links`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data;
+    },
+
     // ============== ACCESS REQUESTS ==============
 
     // Request access to patient's records (Doctor)
