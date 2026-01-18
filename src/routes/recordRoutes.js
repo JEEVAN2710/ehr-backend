@@ -41,6 +41,8 @@ router.get(
   (req, res, next) => {
     console.log('[ROUTE DEBUG] /my-records route matched!');
     console.log('[ROUTE DEBUG] User:', req.user?.email, 'Role:', req.user?.role);
+    // FIX: Set patientId param so controller logic works
+    req.params.patientId = 'my-records';
     next();
   },
   authorizeRoles('doctor', 'labassistant'),
