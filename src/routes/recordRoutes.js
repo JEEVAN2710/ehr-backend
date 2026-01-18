@@ -51,6 +51,14 @@ router.get(
   getPatientRecords
 );
 
+// Get share-all links accessed by doctor
+router.get(
+  '/shared-via-links',
+  authorizeRoles('doctor', 'labassistant'),
+  getSharedViaLinks
+);
+
+// Get patient records by patient ID (MUST be after specific routes)
 router.get(
   '/:patientId',
   authorizeRoles('patient', 'doctor', 'labassistant'),
@@ -130,13 +138,6 @@ router.get(
   '/shared-with-me',
   authorizeRoles('patient', 'doctor', 'labassistant'),
   getSharedRecords
-);
-
-// Get share-all links accessed by doctor
-router.get(
-  '/shared-via-links',
-  authorizeRoles('doctor', 'labassistant'),
-  getSharedViaLinks
 );
 
 // Share all records - generate token (patient only)

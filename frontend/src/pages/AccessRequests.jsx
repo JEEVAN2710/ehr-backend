@@ -14,6 +14,7 @@ const AccessRequests = () => {
     const navigate = useNavigate();
     const [pendingRequests, setPendingRequests] = useState([]);
     const [sharedRecords, setSharedRecords] = useState([]);
+    const [shareViaLinks, setShareViaLinks] = useState([]);
     const [requestHistory, setRequestHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
