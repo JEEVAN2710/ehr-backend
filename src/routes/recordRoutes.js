@@ -12,8 +12,10 @@ import {
   getSharedRecords,
   generateShareAllToken,
   getRecordsByShareToken,
+  getSharedViaLinks,
 } from '../controllers/recordController.js';
 import authenticateToken from '../middleware/auth.js';
+import { optionalAuthenticateToken } from '../middleware/optionalAuth.js';
 import { authorizeRoles } from '../middleware/roles.js';
 
 const router = express.Router();
@@ -130,6 +132,13 @@ router.get(
   getSharedRecords
 );
 
+// Get share-all links accessed by doctor
+router.get(
+  '/shared-via-links',
+  authorizeRoles('doctor', 'labassistant'),
+  getSharedViaLinks
+);
+
 // Share all records - generate token (patient only)
 router.post(
   '/share-all',
@@ -140,10 +149,11 @@ router.post(
   generateShareAllToken
 );
 
-// Public route - Get records by share token (no auth required)
+// Public route - Get records by share token (optional auth for tracking)
 const publicRouter = express.Router();
 publicRouter.get(
   '/shared/all/:token',
+  optionalAuthenticateToken,
   [param('token').notEmpty().withMessage('Token is required')],
   getRecordsByShareToken
 );

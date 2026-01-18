@@ -598,6 +598,22 @@ export const getRecordsByShareToken = async (req, res) => {
     // Record access
     await shareToken.recordAccess();
 
+    // Track doctor access if authenticated
+    if (req.user && (req.user.role === 'doctor' || req.user.role === 'labassistant')) {
+      // Check if doctor hasn't accessed this link before
+      const alreadyAccessed = shareToken.accessedBy.some(
+        access => access.userId.toString() === req.user._id.toString()
+      );
+
+      if (!alreadyAccessed) {
+        shareToken.accessedBy.push({
+          userId: req.user._id,
+          accessedAt: new Date(),
+        });
+        await shareToken.save();
+      }
+    }
+
     // Get all records for the patient
     const records = await MedicalRecord.find({ patientId: shareToken.patientId._id })
       .populate('createdBy', 'firstName lastName email role')
@@ -626,6 +642,54 @@ export const getRecordsByShareToken = async (req, res) => {
   }
 };
 
+/**
+ * Get share-all links accessed by current doctor
+ */
+export const getSharedViaLinks = async (req, res) => {
+  try {
+    const doctorId = req.user._id;
+
+    // Find all share tokens where this doctor appears in accessedBy
+    const shareTokens = await ShareToken.find({
+      'accessedBy.userId': doctorId,
+      expiresAt: { $gt: new Date() }, // Only non-expired tokens
+    })
+      .populate('patientId', 'firstName lastName email')
+      .sort({ 'accessedBy.accessedAt': -1 });
+
+    // Format the response
+    const sharedRecords = shareTokens.map(token => {
+      const access = token.accessedBy.find(a => a.userId.toString() === doctorId.toString());
+      return {
+        id: token._id,
+        type: 'share-all',
+        patient: {
+          id: token.patientId._id,
+          firstName: token.patientId.firstName,
+          lastName: token.patientId.lastName,
+          email: token.patientId.email,
+        },
+        sharedAt: access.accessedAt,
+        expiresAt: token.expiresAt,
+        token: token.token,
+        accessCount: token.accessCount,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: sharedRecords,
+    });
+  } catch (error) {
+    console.error('Error fetching shared-via-links:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch shared records',
+      error: error.message,
+    });
+  }
+};
+
 export default {
   createRecord,
   getPatientRecords,
@@ -638,4 +702,5 @@ export default {
   getSharedRecords,
   generateShareAllToken,
   getRecordsByShareToken,
+  getSharedViaLinks,
 };

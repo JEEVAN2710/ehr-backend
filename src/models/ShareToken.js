@@ -34,6 +34,16 @@ const shareTokenSchema = new mongoose.Schema({
     lastAccessedAt: {
         type: Date,
     },
+    accessedBy: [{
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        accessedAt: {
+            type: Date,
+            default: Date.now,
+        },
+    }],
     createdAt: {
         type: Date,
         default: Date.now,
