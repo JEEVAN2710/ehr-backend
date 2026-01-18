@@ -624,10 +624,12 @@ export const getRecordsByShareToken = async (req, res) => {
       message: 'Records retrieved successfully',
       data: {
         patient: {
+          id: shareToken.patientId._id,
           firstName: shareToken.patientId.firstName,
           lastName: shareToken.patientId.lastName,
           email: shareToken.patientId.email,
         },
+        patientId: shareToken.patientId._id, // For easy access
         records,
         expiresAt: shareToken.expiresAt,
         accessCount: shareToken.accessCount,
