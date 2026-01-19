@@ -38,7 +38,16 @@ const RequestAccessModal = ({ isOpen, onClose, onSuccess }) => {
             }
             handleClose();
         } catch (err) {
-            setError(err.message || 'Failed to send access request');
+            // Provide user-friendly error messages
+            if (err.status === 409) {
+                setError('You already have a pending request for this patient. Please check "My Requests" to view or cancel it.');
+            } else if (err.status === 404) {
+                setError('Patient not found. Please verify the email address.');
+            } else if (err.status === 400) {
+                setError(err.message || 'Invalid request. Please check the patient email.');
+            } else {
+                setError(err.message || 'Failed to send access request');
+            }
         } finally {
             setLoading(false);
         }

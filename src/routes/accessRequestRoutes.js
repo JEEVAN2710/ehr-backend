@@ -7,6 +7,7 @@ import {
     revokeAccess,
     getGrantedAccess,
     getMyRequests,
+    cancelRequest,
 } from '../controllers/accessRequestController.js';
 import authenticateToken from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
@@ -61,6 +62,16 @@ router.get(
     '/granted-access',
     authorizeRoles('patient'),
     getGrantedAccess
+);
+
+// Doctor/Lab assistant cancels their pending request
+router.delete(
+    '/:requestId',
+    authorizeRoles('doctor', 'labassistant'),
+    [
+        param('requestId').isMongoId().withMessage('Valid request ID is required'),
+    ],
+    cancelRequest
 );
 
 // Doctor/Lab assistant views their sent requests

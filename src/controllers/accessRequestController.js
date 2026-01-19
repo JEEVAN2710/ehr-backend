@@ -390,6 +390,56 @@ export const getGrantedAccess = async (req, res) => {
 };
 
 /**
+ * Cancel access request (Doctor cancels their pending request)
+ */
+export const cancelRequest = async (req, res) => {
+    try {
+        const { requestId } = req.params;
+        const requesterId = req.user._id;
+
+        // Find the request
+        const accessRequest = await AccessRequest.findById(requestId);
+
+        if (!accessRequest) {
+            return res.status(404).json({
+                success: false,
+                message: 'Access request not found',
+            });
+        }
+
+        // Verify the logged-in user is the requester
+        if (accessRequest.requesterId.toString() !== requesterId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only cancel your own requests',
+            });
+        }
+
+        // Check if already responded
+        if (accessRequest.status !== 'pending') {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot cancel a request that has been ${accessRequest.status}`,
+            });
+        }
+
+        // Delete the request
+        await AccessRequest.findByIdAndDelete(requestId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Access request cancelled successfully',
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to cancel access request',
+            error: error.message,
+        });
+    }
+};
+
+/**
  * Get my sent requests (Doctor views their requests)
  */
 export const getMyRequests = async (req, res) => {
@@ -442,4 +492,5 @@ export default {
     revokeAccess,
     getGrantedAccess,
     getMyRequests,
+    cancelRequest,
 };

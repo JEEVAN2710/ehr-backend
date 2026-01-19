@@ -607,7 +607,9 @@ const api = {
         });
         const findData = await findResponse.json();
         if (!findResponse.ok || !findData.data.user) {
-            throw new Error(findData.message || 'Patient not found');
+            const error = new Error(findData.message || 'Patient not found');
+            error.status = findResponse.status;
+            throw error;
         }
 
         const patientId = findData.data.user._id;
@@ -620,7 +622,11 @@ const api = {
             body: JSON.stringify({ patientId, message })
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
+        if (!response.ok) {
+            const error = new Error(data.message);
+            error.status = response.status;
+            throw error;
+        }
         return data;
     },
 
@@ -685,6 +691,23 @@ const api = {
         const token = tokenManager.getAccessToken();
         const queryParams = new URLSearchParams(params);
         const response = await fetch(`${API_BASE_URL}/api/access-requests/my-requests?${queryParams}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data;
+    },
+
+    // Alias for consistency
+    getMyAccessRequests: async (params = {}) => {
+        return api.getMyRequests(params);
+    },
+
+    // Cancel access request (Doctor cancels pending request)
+    cancelAccessRequest: async (requestId) => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/access-requests/${requestId}`, {
+            method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();

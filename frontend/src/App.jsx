@@ -11,6 +11,7 @@ import ViewRecord from './pages/ViewRecord';
 import RecordsList from './pages/RecordsList';
 import SharedRecordsView from './pages/SharedRecordsView';
 import AccessRequests from './pages/AccessRequests';
+import MyAccessRequests from './pages/MyAccessRequests';
 import UserManagement from './pages/UserManagement';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -125,6 +126,12 @@ function AppRoutes() {
       <Route path="/shared-records" element={
         <ProtectedRoute>
           <AccessRequests />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/my-requests" element={
+        <ProtectedRoute>
+          <MyAccessRequests />
         </ProtectedRoute>
       } />
 

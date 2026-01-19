@@ -8,7 +8,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import Badge from '../components/Badge';
 import ScanQRModal from '../components/ScanQRModal';
 import RequestAccessModal from '../components/RequestAccessModal';
-import { FileText, Plus, Clock, Users, QrCode, UserPlus } from 'lucide-react';
+import { FileText, Plus, Clock, Users, QrCode, UserPlus, List } from 'lucide-react';
 import { formatRelativeTime } from '../utils/utils';
 import { RECORD_TYPES } from '../utils/constants';
 import './Dashboard.css';
@@ -180,6 +180,11 @@ const DoctorDashboard = () => {
                         <UserPlus size={32} style={{ color: 'var(--color-accent)' }} />
                         <h3>Request Patient Access</h3>
                         <p>Request access to a patient's medical records</p>
+                    </Card>
+                    <Card glass hover onClick={() => navigate('/my-requests')}>
+                        <List size={32} style={{ color: 'var(--color-info)' }} />
+                        <h3>My Requests</h3>
+                        <p>View and manage your sent access requests</p>
                     </Card>
                     <Card glass hover onClick={() => navigate('/records/create')}>
                         <Plus size={32} style={{ color: 'var(--color-primary)' }} />
