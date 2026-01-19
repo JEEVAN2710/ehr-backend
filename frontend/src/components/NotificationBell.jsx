@@ -1,23 +1,33 @@
 import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import NotificationPanel from './NotificationPanel';
 import api from '../services/api';
 import './NotificationBell.css';
 
 const NotificationBell = () => {
+    const { user } = useAuth();
     const [showPanel, setShowPanel] = useState(false);
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(false);
     const [count, setCount] = useState(0);
 
     useEffect(() => {
-        loadPendingRequests();
-        // Poll for new requests every 30 seconds
-        const interval = setInterval(loadPendingRequests, 30000);
-        return () => clearInterval(interval);
-    }, []);
+        // Only load pending requests for patients
+        if (user?.role === 'patient') {
+            loadPendingRequests();
+            // Poll for new requests every 30 seconds
+            const interval = setInterval(loadPendingRequests, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
 
     const loadPendingRequests = async () => {
+        // Double-check user role before making API call
+        if (user?.role !== 'patient') {
+            return;
+        }
+
         try {
             setLoading(true);
             const response = await api.getPendingRequests();
