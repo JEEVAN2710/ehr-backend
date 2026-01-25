@@ -7,9 +7,10 @@ export const getPresignedUploadUrl = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(err => err.msg);
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
+        message: `Validation failed: ${errorMessages.join(', ')}`,
         errors: errors.array(),
       });
     }
@@ -38,7 +39,8 @@ export const getPresignedUploadUrl = async (req, res) => {
     if (!allowedTypes.includes(contentType)) {
       return res.status(400).json({
         success: false,
-        message: `Content type not allowed. Allowed types: ${allowedTypes.join(', ')}`,
+        message: `File type '${contentType}' is not supported. Please upload PDF, images (JPG/PNG), or Word/Excel documents.`,
+        hint: 'Make sure you are uploading medical records like prescriptions, lab reports, or scan images.',
       });
     }
 
