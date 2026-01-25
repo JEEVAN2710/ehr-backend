@@ -13,6 +13,7 @@ import {
   generateShareAllToken,
   getRecordsByShareToken,
   getSharedViaLinks,
+  checkUploadEligibility,
 } from '../controllers/recordController.js';
 import authenticateToken from '../middleware/auth.js';
 import { optionalAuthenticateToken } from '../middleware/optionalAuth.js';
@@ -49,6 +50,13 @@ router.get(
   },
   authorizeRoles('doctor', 'labassistant'),
   getPatientRecords
+);
+
+// Check if patient can upload records (10-day window)
+router.get(
+  '/upload-eligibility',
+  authorizeRoles('patient'),
+  checkUploadEligibility
 );
 
 // Get share-all links accessed by doctor

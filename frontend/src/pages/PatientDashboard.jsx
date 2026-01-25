@@ -9,6 +9,7 @@ import Badge from '../components/Badge';
 import ShareRecordModal from '../components/ShareRecordModal';
 import ShareAllModal from '../components/ShareAllModal';
 import NotificationBell from '../components/NotificationBell';
+import UploadPromptModal from '../components/UploadPromptModal';
 import { FileText, Share2, Clock, Activity } from 'lucide-react';
 import { formatRelativeTime } from '../utils/utils';
 import { RECORD_TYPES } from '../utils/constants';
@@ -23,8 +24,13 @@ const PatientDashboard = () => {
     const [shareAllModalOpen, setShareAllModalOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState(null);
 
+    // Upload window state
+    const [uploadPromptOpen, setUploadPromptOpen] = useState(false);
+    const [uploadEligibility, setUploadEligibility] = useState(null);
+
     useEffect(() => {
         loadDashboardData();
+        checkUploadEligibility();
     }, []);
 
     const loadDashboardData = async () => {
@@ -47,6 +53,25 @@ const PatientDashboard = () => {
             case RECORD_TYPES.REPORT: return 'success';
             default: return 'default';
         }
+    };
+
+    const checkUploadEligibility = async () => {
+        try {
+            const response = await api.checkUploadEligibility();
+            if (response.success && response.canUpload && response.daysRemaining > 0) {
+                setUploadEligibility(response);
+                setUploadPromptOpen(true);
+            }
+        } catch (error) {
+            console.error('Failed to check upload eligibility:', error);
+            // Silently fail - don't interrupt user experience
+        }
+    };
+
+    const handleUploadNow = () => {
+        setUploadPromptOpen(false);
+        // Navigate to upload page (create this page later)
+        navigate('/upload-records');
     };
 
     const handleShare = (e, record) => {
@@ -174,6 +199,13 @@ const PatientDashboard = () => {
                 isOpen={shareAllModalOpen}
                 onClose={() => setShareAllModalOpen(false)}
                 patientId={user._id}
+            />
+
+            <UploadPromptModal
+                isOpen={uploadPromptOpen}
+                onClose={() => setUploadPromptOpen(false)}
+                daysRemaining={uploadEligibility?.daysRemaining || 0}
+                onUpload={handleUploadNow}
             />
         </div>
     );

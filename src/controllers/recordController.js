@@ -692,6 +692,59 @@ export const getSharedViaLinks = async (req, res) => {
   }
 };
 
+/**
+ * Check if patient can still upload records (10-day window)
+ */
+export const checkUploadEligibility = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Only patients have self-upload capability
+    if (user.role !== 'patient') {
+      return res.status(200).json({
+        success: true,
+        canUpload: false,
+        message: 'Only patients can self-upload records',
+      });
+    }
+
+    const canUpload = user.isSelfUploadActive;
+    const now = new Date();
+    const expiresAt = user.selfUploadExpiresAt;
+
+    // Calculate days remaining
+    const msRemaining = expiresAt - now;
+    const daysRemaining = canUpload
+      ? Math.ceil(msRemaining / (24 * 60 * 60 * 1000))
+      : 0;
+
+    return res.status(200).json({
+      success: true,
+      canUpload,
+      expiresAt,
+      daysRemaining,
+      registrationDate: user.registrationDate,
+      message: canUpload
+        ? `You can upload your old medical records! ${daysRemaining} day(s) remaining.`
+        : 'Self-upload period has expired. Contact your doctor to add new records.',
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to check upload eligibility',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+    });
+  }
+};
+
 export default {
   createRecord,
   getPatientRecords,
@@ -705,4 +758,5 @@ export default {
   generateShareAllToken,
   getRecordsByShareToken,
   getSharedViaLinks,
+  checkUploadEligibility,
 };

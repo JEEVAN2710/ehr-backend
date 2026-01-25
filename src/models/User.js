@@ -71,7 +71,47 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+
+  // Patient self-upload grace period (10 days after registration)
+  registrationDate: {
+    type: Date,
+    default: Date.now,
+    immutable: true,  // Cannot be changed after creation
+  },
+
+  canSelfUpload: {
+    type: Boolean,
+    default: function () {
+      // Only patients can self-upload by default
+      return this.role === 'patient';
+    }
+  },
+
+  selfUploadExpiresAt: {
+    type: Date,
+    default: function () {
+      // Automatically set to 10 days from registration
+      return new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+    }
+  }
 });
+
+// Virtual property to check if self-upload is still allowed
+userSchema.virtual('isSelfUploadActive').get(function () {
+  // Only patients can self-upload
+  if (this.role !== 'patient') return false;
+
+  // Check if feature is disabled for this user
+  if (!this.canSelfUpload) return false;
+
+  // Check if still within 10-day window
+  const now = new Date();
+  return now < this.selfUploadExpiresAt;
+});
+
+// Ensure virtuals are included when converting to JSON
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
