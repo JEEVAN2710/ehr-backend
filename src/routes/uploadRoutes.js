@@ -14,7 +14,6 @@ router.post(
   [
     body('filename').trim().notEmpty().withMessage('Filename is required'),
     body('contentType').trim().notEmpty().withMessage('Content type is required'),
-    body('patientId').optional().isMongoId().withMessage('Valid patient ID format required'),
   ],
   getPresignedUploadUrl
 );
