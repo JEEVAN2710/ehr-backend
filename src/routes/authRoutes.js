@@ -14,6 +14,7 @@ import {
   forgotPassword,
   updateUser,
   verifyPatientEmail,
+  getEligibleUploaders,
 } from '../controllers/authController.js';
 import rateLimit from 'express-rate-limit';
 import authenticateToken from '../middleware/auth.js';
@@ -188,6 +189,9 @@ router.put(
   ],
   updateUser
 );
+
+// Get eligible uploaders (admin only)
+router.get('/users/eligible-uploaders', authenticateToken, authorizeRoles('admin'), getEligibleUploaders);
 
 export default router;
 

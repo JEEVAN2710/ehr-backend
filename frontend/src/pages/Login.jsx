@@ -182,24 +182,6 @@ const Login = () => {
             <Link to="/signup" className="auth-link">Create Account</Link>
           </p>
         </div>
-
-        <div className="demo-credentials">
-          <p className="demo-title">Demo Accounts (use any password):</p>
-          <div className="demo-list">
-            <div className="demo-item">
-              <strong>Patient:</strong> patient@test.com
-            </div>
-            <div className="demo-item">
-              <strong>Doctor:</strong> doctor@test.com
-            </div>
-            <div className="demo-item">
-              <strong>Lab:</strong> lab@test.com
-            </div>
-            <div className="demo-item">
-              <strong>Admin:</strong> admin@test.com
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Forgot Password Modal */}

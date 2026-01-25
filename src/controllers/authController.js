@@ -5,6 +5,7 @@ import { sendMail } from '../services/mailService.js';
 import { createAndSendOTP, verifyOTP as verifyOTPService } from '../services/otpService.js';
 import { resetUserPassword } from '../services/passwordResetService.js';
 import bcrypt from 'bcryptjs';
+import moment from 'moment';
 
 // Step 1: Register user and send OTP (user created but not verified)
 export const register = async (req, res) => {
@@ -677,6 +678,79 @@ export const verifyPatientEmail = async (req, res) => {
   }
 };
 
+// Get users eligible for self-upload (10-day window) - Admin only
+export const getEligibleUploaders = async (req, res) => {
+  try {
+    const UPLOAD_WINDOW_DAYS = 10;
+    const now = moment();
+
+    // Find all patients who are within the 10-day upload window
+    const patients = await User.find({
+      role: 'patient',
+      isVerified: true,
+      isActive: true
+    }).select('firstName lastName email phoneNumber createdAt selfUploadExpiresAt firstRecordUploadedAt');
+
+    // Filter and calculate eligibility for each patient
+    const eligibleUsers = patients
+      .map(patient => {
+        const registrationDate = moment(patient.createdAt);
+        const expiresAt = registrationDate.clone().add(UPLOAD_WINDOW_DAYS, 'days');
+        const daysRemaining = expiresAt.diff(now, 'days');
+        const canUpload = now.isBefore(expiresAt) && !patient.firstRecordUploadedAt;
+
+        return {
+          _id: patient._id,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          email: patient.email,
+          phoneNumber: patient.phoneNumber,
+          registeredAt: patient.createdAt,
+          expiresAt: expiresAt.toISOString(),
+          daysRemaining: Math.max(0, daysRemaining),
+          canUpload,
+          hasUploaded: !!patient.firstRecordUploadedAt,
+          firstUploadAt: patient.firstRecordUploadedAt
+        };
+      })
+      // Only return active and recently registered patients (within 30 days)
+      .filter(user => {
+        const daysSinceRegistration = now.diff(moment(user.registeredAt), 'days');
+        return daysSinceRegistration <= 30; // Show patients from last 30 days
+      })
+      // Sort by days remaining (most urgent first)
+      .sort((a, b) => {
+        // Eligible users first
+        if (a.canUpload && !b.canUpload) return -1;
+        if (!a.canUpload && b.canUpload) return 1;
+        // Then by days remaining
+        return a.daysRemaining - b.daysRemaining;
+      });
+
+    const stats = {
+      total: eligibleUsers.length,
+      canUpload: eligibleUsers.filter(u => u.canUpload).length,
+      expired: eligibleUsers.filter(u => !u.canUpload && !u.hasUploaded).length,
+      uploaded: eligibleUsers.filter(u => u.hasUploaded).length
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Eligible uploaders retrieved successfully',
+      data: {
+        users: eligibleUsers,
+        stats
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve eligible uploaders',
+      error: error.message
+    });
+  }
+};
+
 export default {
   register,
   verifyOTP,
@@ -691,4 +765,5 @@ export default {
   forgotPassword,
   updateUser,
   verifyPatientEmail,
+  getEligibleUploaders,
 };

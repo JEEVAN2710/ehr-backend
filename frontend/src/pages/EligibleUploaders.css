@@ -1,0 +1,231 @@
+.eligible-uploaders {
+    padding: var(--spacing-lg);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.title-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    color: var(--color-primary);
+}
+
+.title-section h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-sm);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+    padding: var(--spacing-lg);
+}
+
+.stat-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.stat-icon {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+}
+
+.stat-icon.total {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.stat-icon.eligible {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.stat-icon.uploaded {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.stat-icon.expired {
+    background: var(--color-error-light);
+    color: var(--color-error);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.stat-label {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--color-border);
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lighter);
+    color: var(--color-primary);
+}
+
+.filter-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+/* Users List */
+.users-list {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.user-card {
+    padding: var(--spacing-lg);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.user-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+    gap: var(--spacing-md);
+}
+
+.user-info h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1.2rem;
+    color: var(--color-text-primary);
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.user-timeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.timeline-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.timeline-item .label {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.timeline-item .value {
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+/* Urgency Bar */
+.urgency-bar {
+    height: 6px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: var(--spacing-md);
+}
+
+.urgency-fill {
+    height: 100%;
+    transition: width 0.3s;
+}
+
+.urgency-bar.normal .urgency-fill {
+    background: var(--color-success);
+}
+
+.urgency-bar.warning .urgency-fill {
+    background: var(--color-warning);
+}
+
+.urgency-bar.urgent .urgency-fill {
+    background: var(--color-error);
+}
+
+/* Empty State */
+.empty-state {
+    padding: var(--spacing-xl);
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .user-header {
+        flex-direction: column;
+    }
+
+    .user-timeline {
+        grid-template-columns: 1fr;
+    }
+
+    .filters {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+}

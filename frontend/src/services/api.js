@@ -900,6 +900,19 @@ const api = {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         return data;
+    },
+
+    // ============== ADMIN FUNCTIONS ==============
+
+    // Get patients eligible for self-upload (10-day window)
+    getEligibleUploaders: async () => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/auth/users/eligible-uploaders`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data;
     }
 };
 
