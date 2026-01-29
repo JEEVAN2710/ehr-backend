@@ -34,18 +34,17 @@ async function startServer() {
       }
     } else {
       console.log('\nℹ️  Blockchain disabled (BLOCKCHAIN_ENABLED not set to true)');
-    }</an: parameter >
-      <parameter name="StartLine">1
+    }
 
-    // 3. Start server
+    // 4. Start server
     app.listen(PORT, '0.0.0.0', () => {
-          console.log(`✓ Server is running on http://localhost:${PORT}`);
-        console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`✓ Server is running on http://localhost:${PORT}`);
+      console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
-          console.error('❌ Server startup failed:', error);
-        process.exit(1);
+    console.error('❌ Server startup failed:', error);
+    process.exit(1);
   }
 }
 
-        startServer();
+startServer();
