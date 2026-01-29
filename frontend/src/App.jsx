@@ -13,6 +13,7 @@ import SharedRecordsView from './pages/SharedRecordsView';
 import AccessRequests from './pages/AccessRequests';
 import MyAccessRequests from './pages/MyAccessRequests';
 import UserManagement from './pages/UserManagement';
+import UploadRecords from './pages/UploadRecords';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Protected Route wrapper
@@ -138,6 +139,12 @@ function AppRoutes() {
       <Route path="/users" element={
         <ProtectedRoute>
           <UserManagement />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/upload-records" element={
+        <ProtectedRoute>
+          <UploadRecords />
         </ProtectedRoute>
       } />
 

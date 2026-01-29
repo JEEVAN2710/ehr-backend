@@ -718,7 +718,7 @@ const api = {
     // ============== FILE UPLOAD/DOWNLOAD ==============
 
     // Get presigned upload URL
-    getPresignedUploadUrl: async (filename, contentType, patientId) => {
+    getPresignedUploadUrl: async ({ filename, contentType, patientId }) => {
         const token = tokenManager.getAccessToken();
         const response = await fetch(`${API_BASE_URL}/api/upload/presigned-upload`, {
             method: 'POST',
@@ -896,6 +896,41 @@ const api = {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(recordData)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data;
+    },
+
+    // ============== BLOCKCHAIN ==============
+
+    // Get blockchain audit trail for a record
+    getBlockchainAudit: async (recordId) => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/blockchain/audit/${recordId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data;
+    },
+
+    // Verify record integrity against blockchain
+    verifyRecordIntegrity: async (recordId) => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/blockchain/verify/${recordId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data;
+    },
+
+    // Get blockchain statistics
+    getBlockchainStats: async () => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/blockchain/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);

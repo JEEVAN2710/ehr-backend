@@ -26,6 +26,14 @@ export const createAndSendOTP = async (email, name = 'User', userId = null) => {
         // Generate new OTP
         const code = generateOTPCode();
 
+        // Log OTP in development mode for testing
+        if (process.env.NODE_ENV === 'development') {
+            console.log('\n🔐 =========================');
+            console.log(`📧 OTP for ${email}: ${code}`);
+            console.log('⏱️  Expires in 5 minutes');
+            console.log('=========================\n');
+        }
+
         // Create OTP document
         const otp = new OTP({
             email,

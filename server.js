@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import app from './src/app.js';
 import connectDB from './src/config/db.js';
 import { verifySMTP } from './src/services/mailService.js';
+import { initBlockchain } from './src/services/blockchainService.js';
 
 dotenv.config();
 
@@ -21,7 +22,10 @@ async function startServer() {
     } else if (smtpStatus.configured && !smtpStatus.ok) {
       console.warn(`⚠️  Email configured but verification failed: ${smtpStatus.error}`);
     }
-    console.log('');
+
+    // 3. Initialize blockchain
+    console.log('\n🔗 Initializing blockchain...');
+    await initBlockchain();
 
     // 3. Start server
     app.listen(PORT, '0.0.0.0', () => {

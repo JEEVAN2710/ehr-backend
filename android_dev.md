@@ -1259,7 +1259,8 @@ public class UploadEligibilityResponse {
 
 ### Admin Dashboard Layout XML
 
-**File**: es/layout/activity_admin_dashboard.xml
+**File**: 
+es/layout/activity_admin_dashboard.xml
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -1804,7 +1805,8 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
 ### User Card Layout
 
-**File**: es/layout/item_admin_user.xml
+**File**: 
+es/layout/item_admin_user.xml
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -1913,7 +1915,8 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
 ### AI Review Card Layout
 
-**File**: es/layout/item_admin_review.xml
+**File**: 
+es/layout/item_admin_review.xml
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -2043,4 +2046,860 @@ public class AdminDashboardActivity extends AppCompatActivity {
 ---
 
 **Admin Dashboard is now complete!** This includes platform statistics, user management, and AI upload review functionality. 
+
+---
+
+## 🔗 BACKEND-TO-FRONTEND CONNECTION REQUIREMENTS
+
+This section provides all the essential information required to successfully connect your Android application to the EHR backend system.
+
+---
+
+### 1. Backend Base URLs
+
+#### Local Development
+```
+Base URL: http://localhost:5000
+```
+
+**Note for Android Emulator:**
+- If using Android Studio Emulator, replace `localhost` with `10.0.2.2`
+- Example: `http://10.0.2.2:5000`
+
+**Note for Physical Device:**
+- Use your computer's local IP address
+- Example: `http://192.168.1.XXX:5000`
+- Ensure both devices are on the same network
+
+#### Production Environment
+```
+Base URL: https://ehr-backend-production.onrender.com
+API Base: https://ehr-backend-production.onrender.com/api
+```
+
+**Configuration in Android:**
+```java
+// ApiClient.java or similar
+public class ApiConfig {
+    // Toggle between environments
+    private static final boolean IS_PRODUCTION = false;
+    
+    public static final String LOCAL_BASE_URL = "http://10.0.2.2:5000/api/";
+    public static final String PRODUCTION_BASE_URL = "https://ehr-backend-production.onrender.com/api/";
+    
+    public static String getBaseUrl() {
+        return IS_PRODUCTION ? PRODUCTION_BASE_URL : LOCAL_BASE_URL;
+    }
+}
+```
+
+---
+
+### 2. Full API Specification
+
+#### Authentication Endpoints
+
+**Register User**
+```
+POST /api/auth/register
+Content-Type: application/json
+
+Request Body:
+{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "SecurePass123!",
+    "role": "patient",  // Options: "patient", "doctor", "lab_assistant", "admin"
+    "phone": "+1234567890",
+    "dateOfBirth": "1990-01-15",
+    "gender": "male"
+}
+
+Response (201 Created):
+{
+    "success": true,
+    "message": "Registration successful. Please verify OTP sent to email.",
+    "userId": "507f1f77bcf86cd799439011"
+}
+```
+
+**Verify OTP**
+```
+POST /api/auth/verify-otp
+Content-Type: application/json
+
+Request Body:
+{
+    "email": "john@example.com",
+    "otp": "123456"
+}
+
+Response (200 OK):
+{
+    "success": true,
+    "message": "Email verified successfully",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+        "_id": "507f1f77bcf86cd799439011",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "patient",
+        "phone": "+1234567890"
+    }
+}
+```
+
+**Login**
+```
+POST /api/auth/login
+Content-Type: application/json
+
+Request Body:
+{
+    "email": "john@example.com",
+    "password": "SecurePass123!"
+}
+
+Response (200 OK):
+{
+    "success": true,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+        "_id": "507f1f77bcf86cd799439011",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "patient"
+    }
+}
+```
+
+**Refresh Token**
+```
+POST /api/auth/refresh-token
+Content-Type: application/json
+
+Request Body:
+{
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+Response (200 OK):
+{
+    "success": true,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### Medical Records Endpoints
+
+**Get Patient's Records**
+```
+GET /api/records/patient/:patientId
+Authorization: Bearer {token}
+
+Response (200 OK):
+[
+    {
+        "_id": "507f1f77bcf86cd799439011",
+        "title": "Blood Test Results",
+        "description": "Complete Blood Count",
+        "recordType": "Lab Test",
+        "patient": {
+            "_id": "507f...",
+            "name": "John Doe",
+            "email": "john@example.com"
+        },
+        "doctor": {
+            "_id": "507f...",
+            "name": "Dr. Sarah Lee",
+            "email": "sarah@example.com"
+        },
+        "fileUrl": "https://cloudflare-r2-url.com/file.pdf",
+        "sharedWith": ["507f1f77bcf86cd799439012"],
+        "createdAt": "2024-01-20T10:30:00.000Z",
+        "updatedAt": "2024-01-20T10:30:00.000Z"
+    }
+]
+```
+
+**Create Medical Record**
+```
+POST /api/records
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+Form Data:
+- patientEmail: "john@example.com"
+- title: "Blood Test Results"
+- description: "Complete Blood Count"
+- recordType: "Lab Test"
+- file: [binary file data] (optional)
+
+Response (201 Created):
+{
+    "success": true,
+    "message": "Record created successfully",
+    "record": {
+        "_id": "507f1f77bcf86cd799439011",
+        "title": "Blood Test Results",
+        "description": "Complete Blood Count",
+        "recordType": "Lab Test",
+        "patient": "507f1f77bcf86cd799439010",
+        "doctor": "507f1f77bcf86cd799439012",
+        "fileUrl": "https://cloudflare-r2-url.com/file.pdf",
+        "createdAt": "2024-01-20T10:30:00.000Z"
+    }
+}
+```
+
+**Share Record**
+```
+POST /api/records/:recordId/share
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request Body:
+{
+    "shareWithEmail": "doctor@example.com"
+}
+
+Response (200 OK):
+{
+    "success": true,
+    "message": "Record shared successfully"
+}
+```
+
+**Generate QR Share Link**
+```
+POST /api/records/share-all-qr
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request Body:
+{
+    "expiresIn": 24  // Hours
+}
+
+Response (200 OK):
+{
+    "success": true,
+    "shareToken": "abc123def456...",
+    "shareUrl": "https://frontend.com/share/abc123def456",
+    "expiresAt": "2024-01-21T10:30:00.000Z"
+}
+```
+
+#### Access Request Endpoints
+
+**Request Access to Patient Records**
+```
+POST /api/access-requests
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request Body:
+{
+    "patientId": "507f1f77bcf86cd799439011"
+}
+
+Response (201 Created):
+{
+    "success": true,
+    "message": "Access request sent successfully",
+    "request": {
+        "_id": "507f1f77bcf86cd799439013",
+        "patient": "507f1f77bcf86cd799439011",
+        "requester": "507f1f77bcf86cd799439012",
+        "status": "pending",
+        "createdAt": "2024-01-20T10:30:00.000Z"
+    }
+}
+```
+
+**Get Received Access Requests (Patient)**
+```
+GET /api/access-requests/received
+Authorization: Bearer {token}
+
+Response (200 OK):
+[
+    {
+        "_id": "507f1f77bcf86cd799439013",
+        "patient": {
+            "_id": "507f...",
+            "name": "John Doe",
+            "email": "john@example.com"
+        },
+        "requester": {
+            "_id": "507f...",
+            "name": "Dr. Sarah Lee",
+            "email": "sarah@example.com",
+            "role": "doctor"
+        },
+        "status": "pending",
+        "createdAt": "2024-01-20T10:30:00.000Z"
+    }
+]
+```
+
+**Approve/Deny Access Request**
+```
+PUT /api/access-requests/:requestId
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request Body:
+{
+    "status": "approved"  // or "denied"
+}
+
+Response (200 OK):
+{
+    "success": true,
+    "message": "Access request approved",
+    "request": {
+        "_id": "507f1f77bcf86cd799439013",
+        "status": "approved",
+        "updatedAt": "2024-01-20T11:00:00.000Z"
+    }
+}
+```
+
+#### User Management Endpoints
+
+**Get User Profile**
+```
+GET /api/users/profile
+Authorization: Bearer {token}
+
+Response (200 OK):
+{
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "patient",
+    "phone": "+1234567890",
+    "dateOfBirth": "1990-01-15",
+    "gender": "male",
+    "emailVerified": true,
+    "createdAt": "2024-01-15T08:00:00.000Z"
+}
+```
+
+**Update Profile**
+```
+PUT /api/users/profile
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request Body:
+{
+    "name": "John Updated Doe",
+    "phone": "+1234567891"
+}
+
+Response (200 OK):
+{
+    "success": true,
+    "message": "Profile updated successfully",
+    "user": { /* updated user object */ }
+}
+```
+
+**Change Password**
+```
+PUT /api/users/change-password
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request Body:
+{
+    "currentPassword": "OldPass123!",
+    "newPassword": "NewPass456!"
+}
+
+Response (200 OK):
+{
+    "success": true,
+    "message": "Password changed successfully"
+}
+```
+
+---
+
+### 3. Authentication & Security
+
+#### Token Management
+
+**JWT Token Structure:**
+- **Access Token**: Valid for 24 hours
+- **Refresh Token**: Valid for 7 days
+- Tokens contain: userId, email, role
+
+**Token Storage (Android):**
+```java
+// Store tokens securely using SharedPreferences (encrypted)
+public class TokenManager {
+    private static final String PREF_NAME = "EHR_PREFS";
+    private static final String KEY_ACCESS_TOKEN = "access_token";
+    private static final String KEY_REFRESH_TOKEN = "refresh_token";
+    
+    public static void saveTokens(Context context, String accessToken, String refreshToken) {
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+            .putString(KEY_ACCESS_TOKEN, accessToken)
+            .putString(KEY_REFRESH_TOKEN, refreshToken)
+            .apply();
+    }
+    
+    public static String getAccessToken(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(KEY_ACCESS_TOKEN, null);
+    }
+}
+```
+
+**Authorization Header:**
+```java
+// Add to all authenticated API calls
+@Headers({
+    "Authorization: Bearer {token}",
+    "Content-Type: application/json"
+})
+```
+
+**Automatic Token Refresh:**
+```java
+// Implement interceptor for automatic token refresh on 401 errors
+public class AuthInterceptor implements Interceptor {
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request request = chain.request();
+        Response response = chain.proceed(request);
+        
+        if (response.code() == 401) {
+            // Token expired, refresh it
+            String newToken = refreshToken();
+            if (newToken != null) {
+                // Retry request with new token
+                Request newRequest = request.newBuilder()
+                    .header("Authorization", "Bearer " + newToken)
+                    .build();
+                return chain.proceed(newRequest);
+            }
+        }
+        return response;
+    }
+}
+```
+
+#### Role-Based Access Control (RBAC)
+
+**Role Hierarchy:**
+1. **Admin**: Full system access
+   - User management
+   - Platform statistics
+   - AI upload review
+   - All other features
+
+2. **Doctor**: 
+   - Create medical records
+   - Request access to patient records
+   - View approved patient records
+   - Scan patient QR codes
+
+3. **Lab Assistant**:
+   - Create medical records
+   - View assigned patient records
+
+4. **Patient**:
+   - View own medical records
+   - Share records with doctors/labs
+   - Approve/deny access requests
+   - Upload self-documented records (with AI verification)
+
+**Implement Role Checks (Android):**
+```java
+public class RoleChecker {
+    public static boolean canCreateRecords(String role) {
+        return role.equals("doctor") || role.equals("lab_assistant");
+    }
+    
+    public static boolean canRequestAccess(String role) {
+        return role.equals("doctor");
+    }
+    
+    public static boolean isAdmin(String role) {
+        return role.equals("admin");
+    }
+}
+```
+
+---
+
+### 4. Test Credentials
+
+Use these credentials for testing different user roles:
+
+#### Patient Account
+```
+Email: patient@test.com
+Password: Patient123!
+Role: patient
+```
+
+#### Doctor Account
+```
+Email: doctor@test.com
+Password: Doctor123!
+Role: doctor
+```
+
+#### Lab Assistant Account
+```
+Email: lab@test.com
+Password: Lab123!
+Role: lab_assistant
+```
+
+#### Admin Account
+```
+Email: admin@test.com
+Password: Admin123!
+Role: admin
+```
+
+**Note:** These are test accounts. In production, use the registration flow to create actual accounts.
+
+---
+
+### 5. Environment Details
+
+#### CORS Configuration
+The backend is configured to accept requests from:
+- `http://localhost:*` (all local ports)
+- `http://10.0.2.2:*` (Android emulator)
+- `https://ehr-frontend.vercel.app` (production frontend)
+
+**Custom Origins:** If you need additional origins whitelisted, contact the backend administrator.
+
+#### Tech Stack
+
+**Backend:**
+- **Runtime**: Node.js (v18+)
+- **Framework**: Express.js
+- **Database**: MongoDB (MongoDB Atlas)
+- **File Storage**: Cloudflare R2 (S3-compatible)
+- **Email**: Gmail SMTP via Nodemailer
+- **Authentication**: JWT (jsonwebtoken)
+- **Security**: bcryptjs, helmet, express-rate-limit
+- **File Upload**: Multer
+- **Validation**: express-validator
+
+**Recommended Android Libraries:**
+- **Networking**: Retrofit 2.9+ with OkHttp
+- **JSON Parsing**: Gson or Moshi
+- **Image Loading**: Glide or Picasso
+- **QR Code**: ZXing ("zebra crossing")
+- **PDF Viewing**: AndroidPdfViewer or Google PDF Viewer
+- **File Picker**: Android Storage Access Framework
+
+#### API Response Format
+
+**Success Response:**
+```json
+{
+    "success": true,
+    "message": "Operation completed successfully",
+    "data": { /* response data */ }
+}
+```
+
+**Error Response:**
+```json
+{
+    "success": false,
+    "message": "Error description",
+    "error": "Detailed error message",
+    "errors": [ /* validation errors if any */ ]
+}
+```
+
+#### HTTP Status Codes Used
+- `200 OK`: Successful GET, PUT requests
+- `201 Created`: Successful POST (creation)
+- `400 Bad Request`: Validation errors
+- `401 Unauthorized`: Missing or invalid token
+- `403 Forbidden`: Insufficient permissions
+- `404 Not Found`: Resource not found
+- `409 Conflict`: Duplicate resource
+- `429 Too Many Requests`: Rate limit exceeded
+- `500 Internal Server Error`: Server error
+
+---
+
+### 6. File Upload & Download
+
+#### Upload Medical Record with File
+```java
+// Using Retrofit with Multipart
+@Multipart
+@POST("records")
+Call<RecordResponse> uploadRecord(
+    @Header("Authorization") String token,
+    @Part("patientEmail") RequestBody email,
+    @Part("title") RequestBody title,
+    @Part("description") RequestBody description,
+    @Part("recordType") RequestBody type,
+    @Part MultipartBody.Part file
+);
+
+// Usage
+File file = new File(filePath);
+RequestBody requestFile = RequestBody.create(
+    MediaType.parse("application/pdf"), 
+    file
+);
+MultipartBody.Part filePart = MultipartBody.Part.createFormData(
+    "file", 
+    file.getName(), 
+    requestFile
+);
+```
+
+#### Download File from URL
+```java
+// Files are stored in Cloudflare R2
+// URLs are presigned and expire after 1 hour
+// Use Glide/Picasso for images, custom downloader for PDFs
+
+public void downloadFile(String fileUrl, String fileName) {
+    OkHttpClient client = new OkHttpClient();
+    Request request = new Request.Builder()
+        .url(fileUrl)
+        .build();
+        
+    client.newCall(request).enqueue(new Callback() {
+        @Override
+        public void onResponse(Call call, Response response) {
+            // Save file to local storage
+            File file = new File(
+                Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS
+                ), fileName
+            );
+            BufferedSink sink = Okio.buffer(Okio.sink(file));
+            sink.writeAll(response.body().source());
+            sink.close();
+        }
+    });
+}
+```
+
+---
+
+### 7. QR Code Integration
+
+#### Generate QR Code for Patient
+```java
+// Use ZXing library
+public Bitmap generateQRCode(String data, int size) {
+    try {
+        QRCodeWriter writer = new QRCodeWriter();
+        BitMatrix bitMatrix = writer.encode(
+            data, 
+            BarcodeFormat.QR_CODE, 
+            size, 
+            size
+        );
+        
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                bitmap.setPixel(
+                    x, 
+                    y, 
+                    bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE
+                );
+            }
+        }
+        return bitmap;
+    } catch (WriterException e) {
+        e.printStackTrace();
+        return null;
+    }
+}
+```
+
+#### Scan QR Code (Doctor)
+```java
+// Add CameraX and ZXing dependencies
+// Scan patient QR to get patient ID
+// Use patient ID to fetch records or create new record
+
+IntentIntegrator integrator = new IntentIntegrator(activity);
+integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE);
+integrator.setPrompt("Scan Patient QR Code");
+integrator.setCameraId(0);
+integrator.setBeepEnabled(true);
+integrator.initiateScan();
+
+// In onActivityResult:
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+    if(result != null && result.getContents() != null) {
+        String scannedData = result.getContents();
+        // Use scannedData (patient ID or share token)
+    }
+}
+```
+
+---
+
+### 8. Real-time Notifications (Future Enhancement)
+
+**Current Implementation:**
+- Polling-based: App fetches notifications/requests periodically
+- Recommended interval: 30-60 seconds when app is active
+
+**Future WebSocket/FCM Integration:**
+- Real-time push notifications
+- Firebase Cloud Messaging (FCM) for Android
+- WebSocket endpoint: `wss://backend-url/socket`
+
+---
+
+### 9. Error Handling Best Practices
+
+```java
+// Centralized error handler
+public class ApiErrorHandler {
+    public static void handleError(Context context, Throwable error) {
+        if (error instanceof HttpException) {
+            HttpException httpException = (HttpException) error;
+            int code = httpException.code();
+            
+            switch (code) {
+                case 401:
+                    // Token expired, refresh token or redirect to login
+                    Toast.makeText(context, "Session expired. Please login again.", Toast.LENGTH_SHORT).show();
+                    // Redirect to LoginActivity
+                    break;
+                case 403:
+                    Toast.makeText(context, "You don't have permission for this action.", Toast.LENGTH_SHORT).show();
+                    break;
+                case 404:
+                    Toast.makeText(context, "Resource not found.", Toast.LENGTH_SHORT).show();
+                    break;
+                case 500:
+                    Toast.makeText(context, "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    Toast.makeText(context, "An error occurred: " + code, Toast.LENGTH_SHORT).show();
+            }
+        } else if (error instanceof IOException) {
+            Toast.makeText(context, "Network error. Check your connection.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(context, "An unexpected error occurred.", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+```
+
+---
+
+### 10. Performance Optimization
+
+**Caching Strategy:**
+```java
+// Add caching to Retrofit
+File httpCacheDirectory = new File(context.getCacheDir(), "http-cache");
+int cacheSize = 10 * 1024 * 1024; // 10 MB
+Cache cache = new Cache(httpCacheDirectory, cacheSize);
+
+OkHttpClient client = new OkHttpClient.Builder()
+    .cache(cache)
+    .addInterceptor(new CacheInterceptor())
+    .build();
+```
+
+**Image Loading Optimization:**
+```java
+// Use Glide for efficient image loading
+Glide.with(context)
+    .load(imageUrl)
+    .placeholder(R.drawable.placeholder)
+    .error(R.drawable.error_image)
+    .diskCacheStrategy(DiskCacheStrategy.ALL)
+    .into(imageView);
+```
+
+**Pagination for Large Lists:**
+```
+GET /api/records/patient/:patientId?page=1&limit=20
+
+Response:
+{
+    "success": true,
+    "data": [...],
+    "pagination": {
+        "currentPage": 1,
+        "totalPages": 5,
+        "totalRecords": 100,
+        "limit": 20
+    }
+}
+```
+
+---
+
+### 11. Testing Checklist
+
+- [ ] Successful registration with all roles
+- [ ] OTP verification flow
+- [ ] Login with valid credentials
+- [ ] Login with invalid credentials (error handling)
+- [ ] Token refresh on 401 error
+- [ ] Create medical record (doctor/lab)
+- [ ] Upload file with record
+- [ ] View patient records
+- [ ] Share record with another user
+- [ ] QR code generation and scanning
+- [ ] Access request flow (request → approve → view records)
+- [ ] Access request denial
+- [ ] Profile update
+- [ ] Password change
+- [ ] File download
+- [ ] Offline mode graceful handling
+- [ ] Network error handling
+- [ ] Session expiry handling
+
+---
+
+### 12. Additional Resources
+
+**API Documentation:**
+- Full API docs available via Postman
+- Contact admin for Postman collection
+
+**Backend Repository:**
+- GitHub: [Your EHR Backend Repo]
+- Issues/Support: [GitHub Issues Link]
+
+**Production Monitoring:**
+- Backend Status: [Render Dashboard]
+- Database Status: [MongoDB Atlas Dashboard]
+
+**Support Contacts:**
+- Technical Support: jeevanpatil.025@gmail.com
+- Documentation: See `DEPLOYMENT.md` in backend repository
+
+---
+
+**🎉 You now have all the information needed to connect your Android app to the EHR backend!** Start with authentication, test with the provided credentials, and gradually implement each feature according to the UI/UX designs provided earlier in this document.
 

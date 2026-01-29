@@ -1,6 +1,6 @@
 import { validationResult } from 'express-validator';
-import crypto from 'crypto';
 import { MedicalRecord } from '../models/MedicalRecord.js';
+import { logAudit } from '../services/blockchainService.js';
 import { User } from '../models/User.js';
 import { ShareToken } from '../models/ShareToken.js';
 import { validatePagination } from '../utils/validators.js';
@@ -47,6 +47,23 @@ export const createRecord = async (req, res) => {
     await medicalRecord.save();
     await medicalRecord.populate('patientId', 'firstName lastName email');
     await medicalRecord.populate('createdBy', 'firstName lastName email role');
+
+    // Log to blockchain (async, non-blocking)
+    logAudit(
+      medicalRecord._id,
+      'CREATE',
+      userId,
+      {
+        title: medicalRecord.title,
+        description: medicalRecord.description,
+        recordType: medicalRecord.recordType,
+        patientId: medicalRecord.patientId._id.toString()
+      },
+      {
+        createdBy: req.user.email,
+        role: req.user.role
+      }
+    ).catch(err => console.error('Blockchain audit error:', err));
 
     return res.status(201).json({
       success: true,

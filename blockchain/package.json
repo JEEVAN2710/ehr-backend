@@ -1,0 +1,11 @@
+{
+    "name": "ehr-blockchain",
+    "version": "1.0.0",
+    "description": "EHR Blockchain Smart Contracts",
+    "private": true,
+    "scripts": {
+        "compile": "hardhat compile",
+        "deploy:local": "hardhat run scripts/deploy-mumbai.js --network hardhat",
+        "deploy:mumbai": "hardhat run scripts/deploy-mumbai.js --network mumbai"
+    }
+}

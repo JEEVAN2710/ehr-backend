@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js';
 import recordRoutes, { publicRouter as publicRecordRoutes } from './routes/recordRoutes.js';
 import accessRequestRoutes from './routes/accessRequestRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import blockchainRoutes from './routes/blockchainRoutes.js';
 import testRoutes from './routes/testRoutes.js';
 import { sendMail } from './services/mailService.js';
 
@@ -47,6 +48,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/access-requests', accessRequestRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/blockchain', blockchainRoutes);
 app.use('/api', testRoutes); // Test routes
 
 // Debug: List all routes
@@ -59,6 +61,10 @@ console.log('✓ /api/records/shared/all/:token (public)');
 console.log('✓ /api/auth/*');
 console.log('✓ /api/access-requests/*');
 console.log('✓ /api/upload/*');
+console.log('✓ /api/blockchain/*');
+console.log('  - GET /audit/:recordId');
+console.log('  - GET /verify/:recordId');
+console.log('  - GET /stats');
 console.log('=============================\n');
 
 app.get('/api/health', (req, res) => {

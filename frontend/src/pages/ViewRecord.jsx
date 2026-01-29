@@ -5,7 +5,8 @@ import api from '../services/api';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { ArrowLeft, Download, FileText, Calendar, User, AlertCircle } from 'lucide-react';
+import BlockchainAudit from '../components/BlockchainAudit';
+import { ArrowLeft, Download, FileText, Calendar, User, AlertCircle, Shield, Info } from 'lucide-react';
 import './ViewRecord.css';
 
 const ViewRecord = () => {
@@ -15,6 +16,7 @@ const ViewRecord = () => {
     const [record, setRecord] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState('details'); // 'details' or 'blockchain'
 
     useEffect(() => {
         fetchRecord();
@@ -85,86 +87,112 @@ const ViewRecord = () => {
             </div>
 
             <Card glass>
-                <div className="record-details">
-                    <div className="record-title-section">
-                        <FileText size={32} className="record-icon" />
-                        <div>
-                            <h1>{record.title}</h1>
-                            <div className="record-meta">
-                                <span className="record-type-badge">{record.recordType}</span>
-                                <span className="record-date">
-                                    <Calendar size={16} />
-                                    {new Date(record.createdAt).toLocaleDateString()}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="record-section">
-                        <h3>Description</h3>
-                        <p className="record-description">{record.description}</p>
-                    </div>
-
-                    <div className="record-section">
-                        <h3>Patient Information</h3>
-                        <div className="info-grid">
-                            <div className="info-item">
-                                <span className="info-label">Name:</span>
-                                <span className="info-value">
-                                    {record.patientId?.firstName} {record.patientId?.lastName}
-                                </span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Email:</span>
-                                <span className="info-value">{record.patientId?.email}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="record-section">
-                        <h3>Created By</h3>
-                        <div className="info-grid">
-                            <div className="info-item">
-                                <span className="info-label">Name:</span>
-                                <span className="info-value">
-                                    {record.createdBy?.firstName} {record.createdBy?.lastName}
-                                </span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Role:</span>
-                                <span className="info-value">{record.createdBy?.role}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {record.files && record.files.length > 0 && (
-                        <div className="record-section">
-                            <h3>Attached Files ({record.files.length})</h3>
-                            <div className="files-list">
-                                {record.files.map((file, index) => (
-                                    <div key={index} className="file-item">
-                                        <div className="file-info">
-                                            <FileText size={24} className="file-icon" />
-                                            <div>
-                                                <p className="file-name">{file.filename}</p>
-                                                <p className="file-size">
-                                                    {(file.size / 1024).toFixed(2)} KB
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Button
-                                            variant="secondary"
-                                            icon={<Download size={18} />}
-                                            onClick={() => handleDownloadFile(file)}
-                                        >
-                                            Download
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                {/* Tab Navigation */}
+                <div className="record-tabs">
+                    <button
+                        className={`tab-button ${activeTab === 'details' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('details')}
+                    >
+                        <Info size={18} />
+                        Details
+                    </button>
+                    <button
+                        className={`tab-button ${activeTab === 'blockchain' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('blockchain')}
+                    >
+                        <Shield size={18} />
+                        Blockchain Audit
+                    </button>
                 </div>
+
+                {/* Details Tab */}
+                {activeTab === 'details' && (
+                    <div className="record-details">
+                        <div className="record-title-section">
+                            <FileText size={32} className="record-icon" />
+                            <div>
+                                <h1>{record.title}</h1>
+                                <div className="record-meta">
+                                    <span className="record-type-badge">{record.recordType}</span>
+                                    <span className="record-date">
+                                        <Calendar size={16} />
+                                        {new Date(record.createdAt).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="record-section">
+                            <h3>Description</h3>
+                            <p className="record-description">{record.description}</p>
+                        </div>
+
+                        <div className="record-section">
+                            <h3>Patient Information</h3>
+                            <div className="info-grid">
+                                <div className="info-item">
+                                    <span className="info-label">Name:</span>
+                                    <span className="info-value">
+                                        {record.patientId?.firstName} {record.patientId?.lastName}
+                                    </span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="info-label">Email:</span>
+                                    <span className="info-value">{record.patientId?.email}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="record-section">
+                            <h3>Created By</h3>
+                            <div className="info-grid">
+                                <div className="info-item">
+                                    <span className="info-label">Name:</span>
+                                    <span className="info-value">
+                                        {record.createdBy?.firstName} {record.createdBy?.lastName}
+                                    </span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="info-label">Role:</span>
+                                    <span className="info-value">{record.createdBy?.role}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {record.files && record.files.length > 0 && (
+                            <div className="record-section">
+                                <h3>Attached Files ({record.files.length})</h3>
+                                <div className="files-list">
+                                    {record.files.map((file, index) => (
+                                        <div key={index} className="file-item">
+                                            <div className="file-info">
+                                                <FileText size={24} className="file-icon" />
+                                                <div>
+                                                    <p className="file-name">{file.filename}</p>
+                                                    <p className="file-size">
+                                                        {(file.size / 1024).toFixed(2)} KB
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                variant="secondary"
+                                                icon={<Download size={18} />}
+                                                onClick={() => handleDownloadFile(file)}
+                                            >
+                                                Download
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Blockchain Audit Tab */}
+                {activeTab === 'blockchain' && (
+                    <BlockchainAudit recordId={id} />
+                )}
             </Card>
         </div>
     );

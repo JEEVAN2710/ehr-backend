@@ -40,7 +40,6 @@ const userSchema = new mongoose.Schema({
   },
   phoneNumber: {
     type: String,
-    default: null,
     sparse: true,
     unique: true,
     validate: {
