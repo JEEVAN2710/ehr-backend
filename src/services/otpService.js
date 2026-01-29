@@ -26,10 +26,12 @@ export const createAndSendOTP = async (email, name = 'User', userId = null) => {
         // Generate new OTP
         const code = generateOTPCode();
 
-        // Log OTP in development mode for testing
-        if (process.env.NODE_ENV === 'development') {
+        // Log OTP in terminal for testing (development or when explicitly enabled)
+        // Set SHOW_OTP_IN_LOGS=true in Render environment variables for testing
+        if (process.env.NODE_ENV === 'development' || process.env.SHOW_OTP_IN_LOGS === 'true') {
             console.log('\n🔐 =========================');
             console.log(`📧 OTP for ${email}: ${code}`);
+            console.log(`👤 Name: ${name}`);
             console.log('⏱️  Expires in 5 minutes');
             console.log('=========================\n');
         }
@@ -46,6 +48,17 @@ export const createAndSendOTP = async (email, name = 'User', userId = null) => {
 
         // Send OTP via email
         const emailSent = await sendOTPEmail(email, name, code);
+
+        // If email failed to send, always log OTP to console as fallback
+        if (!emailSent) {
+            console.log('\n⚠️  EMAIL SEND FAILED - OTP CODE:');
+            console.log('=================================');
+            console.log(`📧 Email: ${email}`);
+            console.log(`🔐 OTP Code: ${code}`);
+            console.log(`👤 Name: ${name}`);
+            console.log('⏱️  Expires in 5 minutes');
+            console.log('=================================\n');
+        }
 
         return {
             success: true,
