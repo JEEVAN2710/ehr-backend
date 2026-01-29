@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 import app from './src/app.js';
 import connectDB from './src/config/db.js';
 import { verifySMTP } from './src/services/mailService.js';
-import { initBlockchain } from './src/services/blockchainService.js';
 
 dotenv.config();
 
@@ -23,19 +22,30 @@ async function startServer() {
       console.warn(`⚠️  Email configured but verification failed: ${smtpStatus.error}`);
     }
 
-    // 3. Initialize blockchain
-    console.log('\n🔗 Initializing blockchain...');
-    await initBlockchain();
+    // 3. Initialize blockchain (optional - only if enabled)
+    if (process.env.BLOCKCHAIN_ENABLED === 'true') {
+      try {
+        console.log('\n🔗 Initializing blockchain...');
+        const { initBlockchain } = await import('./src/services/blockchainService.js');
+        await initBlockchain();
+      } catch (error) {
+        console.warn('⚠️  Blockchain initialization failed:', error.message);
+        console.warn('   Continuing without blockchain functionality...');
+      }
+    } else {
+      console.log('\nℹ️  Blockchain disabled (BLOCKCHAIN_ENABLED not set to true)');
+    }</an: parameter >
+      <parameter name="StartLine">1
 
     // 3. Start server
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✓ Server is running on http://localhost:${PORT}`);
-      console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+          console.log(`✓ Server is running on http://localhost:${PORT}`);
+        console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
-    console.error('❌ Server startup failed:', error);
-    process.exit(1);
+          console.error('❌ Server startup failed:', error);
+        process.exit(1);
   }
 }
 
-startServer();
+        startServer();
