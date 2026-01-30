@@ -4,6 +4,7 @@ import { logAudit } from '../services/blockchainService.js';
 import { User } from '../models/User.js';
 import { ShareToken } from '../models/ShareToken.js';
 import { validatePagination } from '../utils/validators.js';
+import crypto from 'crypto';
 
 export const createRecord = async (req, res) => {
   try {
