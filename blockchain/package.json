@@ -5,7 +5,8 @@
     "private": true,
     "scripts": {
         "compile": "hardhat compile",
-        "deploy:local": "hardhat run scripts/deploy-mumbai.js --network hardhat",
-        "deploy:mumbai": "hardhat run scripts/deploy-mumbai.js --network mumbai"
+        "deploy:mumbai": "hardhat run scripts/deploy-mumbai.js --network mumbai",
+        "deploy:local": "hardhat run scripts/deploy-local.js --network hardhat",
+        "deploy:ganache": "hardhat run scripts/deploy-ganache.js --network ganache"
     }
 }

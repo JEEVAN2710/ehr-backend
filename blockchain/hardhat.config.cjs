@@ -19,6 +19,12 @@ module.exports = {
         hardhat: {
             chainId: 31337
         },
+        ganache: {
+            url: "http://127.0.0.1:7545",
+            accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+            chainId: 1337,
+            gas: 6721975
+        },
         mumbai: {
             url: "https://rpc-mumbai.maticvigil.com",
             accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
