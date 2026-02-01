@@ -105,11 +105,11 @@ const CreateRecord = () => {
         try {
             // Step 1: Get presigned upload URL
             onProgress(20);
-            const uploadResponse = await api.getPresignedUploadUrl(
-                file.name,
-                file.type,
+            const uploadResponse = await api.getPresignedUploadUrl({
+                filename: file.name,
+                contentType: file.type,
                 patientId
-            );
+            });
 
             // Step 2: Upload file to R2
             onProgress(50);

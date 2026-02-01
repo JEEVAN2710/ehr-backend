@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { getPresignedUploadUrl, getPresignedDownloadUrl } from '../controllers/uploadController.js';
+import { getPresignedUploadUrl, getPresignedDownloadUrl, checkFileExistsController } from '../controllers/uploadController.js';
 import authenticateToken from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
 
@@ -23,6 +23,13 @@ router.post(
   authorizeRoles('patient', 'doctor', 'labassistant'),
   [body('fileKey').trim().notEmpty().withMessage('File key is required')],
   getPresignedDownloadUrl
+);
+
+// Check if file exists in R2
+router.get(
+  '/check-file/:fileKey',
+  authorizeRoles('patient', 'doctor', 'labassistant'),
+  checkFileExistsController
 );
 
 export default router;

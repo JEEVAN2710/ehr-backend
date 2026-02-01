@@ -1,4 +1,4 @@
-import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client } from '../config/aws.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -42,7 +42,27 @@ export const generatePresignedDownloadUrl = async (fileKey) => {
   }
 };
 
+export const checkFileExists = async (fileKey) => {
+  try {
+    const bucketName = process.env.R2_BUCKET_NAME || process.env.S3_BUCKET;
+
+    const command = new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: fileKey,
+    });
+
+    await s3Client.send(command);
+    return { exists: true };
+  } catch (error) {
+    if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+      return { exists: false };
+    }
+    throw new Error(`Failed to check file existence: ${error.message}`);
+  }
+};
+
 export default {
   generatePresignedUploadUrl,
   generatePresignedDownloadUrl,
+  checkFileExists,
 };

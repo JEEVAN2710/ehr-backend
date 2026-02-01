@@ -762,6 +762,20 @@ const api = {
         return data;
     },
 
+    // Check if file exists in R2
+    checkFileExists: async (fileKey) => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/upload/check-file/${encodeURIComponent(fileKey)}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data;
+    },
+
     // Add file to medical record
     addFileToRecord: async (recordId, fileData) => {
         const token = tokenManager.getAccessToken();

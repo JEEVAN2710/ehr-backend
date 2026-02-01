@@ -17,6 +17,8 @@ const ViewRecord = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('details'); // 'details' or 'blockchain'
+    const [fileExistence, setFileExistence] = useState({}); // { fileKey: boolean }
+    const [checkingFiles, setCheckingFiles] = useState(false);
 
     useEffect(() => {
         fetchRecord();
@@ -29,10 +31,40 @@ const ViewRecord = () => {
             const response = await api.getRecord(id);
             // API returns data directly, not nested under 'record'
             setRecord(response.data);
+
+            // Check file existence if record has files
+            if (response.data.files && response.data.files.length > 0) {
+                checkFilesExistence(response.data.files);
+            }
         } catch (err) {
             setError(err.message || 'Failed to load record');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const checkFilesExistence = async (files) => {
+        try {
+            setCheckingFiles(true);
+            const existenceMap = {};
+
+            // Check each file in parallel
+            await Promise.all(files.map(async (file) => {
+                try {
+                    const result = await api.checkFileExists(file.key);
+                    existenceMap[file.key] = result.exists;
+                } catch (err) {
+                    console.error(`Failed to check existence for ${file.key}:`, err);
+                    // Assume file exists if check fails (to avoid false warnings)
+                    existenceMap[file.key] = true;
+                }
+            }));
+
+            setFileExistence(existenceMap);
+        } catch (err) {
+            console.error('Error checking file existence:', err);
+        } finally {
+            setCheckingFiles(false);
         }
     };
 
@@ -163,26 +195,47 @@ const ViewRecord = () => {
                             <div className="record-section">
                                 <h3>Attached Files ({record.files.length})</h3>
                                 <div className="files-list">
-                                    {record.files.map((file, index) => (
-                                        <div key={index} className="file-item">
-                                            <div className="file-info">
-                                                <FileText size={24} className="file-icon" />
-                                                <div>
-                                                    <p className="file-name">{file.filename}</p>
-                                                    <p className="file-size">
-                                                        {(file.size / 1024).toFixed(2)} KB
-                                                    </p>
+                                    {record.files.map((file, index) => {
+                                        const fileExists = fileExistence[file.key] !== false;
+                                        const isChecking = checkingFiles && fileExistence[file.key] === undefined;
+
+                                        return (
+                                            <div key={index} className={`file-item ${!fileExists ? 'file-missing' : ''}`}>
+                                                <div className="file-info">
+                                                    <FileText size={24} className="file-icon" />
+                                                    <div>
+                                                        <p className="file-name">
+                                                            {file.filename}
+                                                            {!fileExists && (
+                                                                <span className="file-warning" title="This file was deleted from storage">
+                                                                    ⚠️ Not Available
+                                                                </span>
+                                                            )}
+                                                            {isChecking && (
+                                                                <span className="file-checking">Checking...</span>
+                                                            )}
+                                                        </p>
+                                                        <p className="file-size">
+                                                            {(file.size / 1024).toFixed(2)} KB
+                                                        </p>
+                                                        {!fileExists && (
+                                                            <p className="file-missing-note">
+                                                                File deleted from storage but metadata remains
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
+                                                <Button
+                                                    variant="secondary"
+                                                    icon={<Download size={18} />}
+                                                    onClick={() => handleDownloadFile(file)}
+                                                    disabled={!fileExists || isChecking}
+                                                >
+                                                    {!fileExists ? 'Unavailable' : 'Download'}
+                                                </Button>
                                             </div>
-                                            <Button
-                                                variant="secondary"
-                                                icon={<Download size={18} />}
-                                                onClick={() => handleDownloadFile(file)}
-                                            >
-                                                Download
-                                            </Button>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}

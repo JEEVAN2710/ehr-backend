@@ -1,5 +1,5 @@
 import { validationResult } from 'express-validator';
-import { generatePresignedUploadUrl, generatePresignedDownloadUrl } from '../services/s3Service.js';
+import { generatePresignedUploadUrl, generatePresignedDownloadUrl, checkFileExists } from '../services/s3Service.js';
 import { MedicalRecord } from '../models/MedicalRecord.js';
 import { AuditLog } from '../models/AuditLog.js';
 
@@ -176,7 +176,40 @@ export const getPresignedDownloadUrl = async (req, res) => {
   }
 };
 
+export const checkFileExistsController = async (req, res) => {
+  try {
+    const { fileKey } = req.params;
+
+    if (!fileKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'File key is required',
+      });
+    }
+
+    // Decode the fileKey (in case it's URL encoded)
+    const decodedFileKey = decodeURIComponent(fileKey);
+
+    // Check if file exists in R2
+    const result = await checkFileExists(decodedFileKey);
+
+    return res.status(200).json({
+      success: true,
+      exists: result.exists,
+      fileKey: decodedFileKey,
+    });
+  } catch (error) {
+    console.error('Error checking file existence:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to check file existence',
+      error: error.message,
+    });
+  }
+};
+
 export default {
   getPresignedUploadUrl,
   getPresignedDownloadUrl,
+  checkFileExistsController,
 };
