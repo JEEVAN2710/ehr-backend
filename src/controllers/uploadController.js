@@ -30,6 +30,7 @@ export const getPresignedUploadUrl = async (req, res) => {
       'image/jpeg',
       'image/png',
       'image/jpg',
+      'image/webp',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-excel',
@@ -39,7 +40,7 @@ export const getPresignedUploadUrl = async (req, res) => {
     if (!allowedTypes.includes(contentType)) {
       return res.status(400).json({
         success: false,
-        message: `File type '${contentType}' is not supported. Please upload PDF, images (JPG/PNG), or Word/Excel documents.`,
+        message: `File type '${contentType}' is not supported. Please upload PDF, images (JPG/PNG/WebP), or Word/Excel documents.`,
         hint: 'Make sure you are uploading medical records like prescriptions, lab reports, or scan images.',
       });
     }
