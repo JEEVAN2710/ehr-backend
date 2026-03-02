@@ -66,6 +66,13 @@ router.get(
   getSharedViaLinks
 );
 
+// Get records shared with me (MUST be before /:patientId wildcard)
+router.get(
+  '/shared-with-me',
+  authorizeRoles('patient', 'doctor', 'labassistant'),
+  getSharedRecords
+);
+
 // Get patient records by patient ID (MUST be after specific routes)
 router.get(
   '/:patientId',
@@ -141,12 +148,7 @@ router.delete(
   revokeRecordSharing
 );
 
-// Get records shared with me
-router.get(
-  '/shared-with-me',
-  authorizeRoles('patient', 'doctor', 'labassistant'),
-  getSharedRecords
-);
+
 
 // Share all records - generate token (patient only)
 router.post(
