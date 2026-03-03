@@ -4,15 +4,15 @@ import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import api from '../services/api';
-import { Mail, Lock, AlertCircle, Activity, CheckCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Shield, CheckCircle, Stethoscope, Activity, FileText, Syringe, Clock, Smartphone } from 'lucide-react';
 import { validateEmail } from '../utils/utils';
-import './Auth.css';
+import './Login.css';
 
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    identifier: '', // Can be email or phone
+    identifier: '',
     password: ''
   });
   const [errors, setErrors] = useState({});
@@ -27,7 +27,6 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -36,33 +35,26 @@ const Login = () => {
 
   const validate = () => {
     const newErrors = {};
-
     if (!formData.identifier) {
       newErrors.identifier = 'Email or phone number is required';
     }
-
     if (!formData.password) {
       newErrors.password = 'Password is required';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validate()) return;
 
     setLoading(true);
     setServerError('');
 
     try {
-      // Determine if identifier is email or phone
       const isEmail = validateEmail(formData.identifier);
-      const loginData = {
-        password: formData.password
-      };
+      const loginData = { password: formData.password };
 
       if (isEmail) {
         loginData.email = formData.identifier;
@@ -113,76 +105,115 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card glass animate-scaleIn">
-        <div className="auth-header">
-          <div className="auth-logo">
-            <Activity size={40} className="logo-icon" />
-          </div>
-          <h1 className="auth-title">Welcome Back</h1>
-          <p className="auth-subtitle">Sign in to access your health records</p>
-        </div>
+    <div className="vault-login-page">
+      {/* Ambient background glow */}
+      <div className="vault-ambient-light"></div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {serverError && (
-            <div className="error-alert">
-              <AlertCircle size={20} />
-              <span>{serverError}</span>
+      {/* Vault 3D Scene */}
+      <div className="vault-scene-container">
+        <div className="vault-assembly">
+          {/* Central vault core */}
+          <div className="vault-core">
+            <div className="vault-door">
+              <div className="vault-handle"></div>
             </div>
-          )}
-
-          <Input
-            label="Email or Phone Number"
-            type="text"
-            name="identifier"
-            value={formData.identifier}
-            onChange={handleChange}
-            placeholder="your.email@example.com or +1234567890"
-            icon={<Mail size={18} />}
-            error={errors.identifier}
-            required
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="••••••••"
-            icon={<Lock size={18} />}
-            error={errors.password}
-            required
-          />
-
-          <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '8px' }}>
-            <button
-              type="button"
-              onClick={() => setShowForgotPassword(true)}
-              className="forgot-password-link"
-            >
-              Forgot Password?
-            </button>
           </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-          </Button>
-        </form>
+          {/* Orbit rings with medical icons */}
+          <div className="vault-orbit-ring vault-orbit-1">
+            <div className="vault-icon-floater vault-pos-1">
+              <Stethoscope size={24} />
+            </div>
+            <div className="vault-icon-floater vault-pos-2">
+              <Activity size={24} />
+            </div>
+            <div className="vault-icon-floater vault-pos-3">
+              <Shield size={24} />
+            </div>
+          </div>
 
-        <div className="auth-footer">
-          <p>
-            Don't have an account?{' '}
-            <Link to="/signup" className="auth-link">Create Account</Link>
-          </p>
+          <div className="vault-orbit-ring vault-orbit-2">
+            <div className="vault-icon-floater vault-pos-4">
+              <FileText size={24} />
+            </div>
+            <div className="vault-icon-floater vault-pos-5">
+              <Syringe size={24} />
+            </div>
+            <div className="vault-icon-floater vault-pos-6">
+              <Clock size={24} />
+            </div>
+          </div>
+
+          <div className="vault-orbit-ring vault-orbit-3">
+            <div className="vault-icon-floater vault-pos-7">
+              <Lock size={24} />
+            </div>
+            <div className="vault-icon-floater vault-pos-8">
+              <Smartphone size={24} />
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Login Form Overlay */}
+      <form className="vault-login-overlay" onSubmit={handleSubmit}>
+        <div className="vault-app-header">
+          <h1>Medi Locker <span>EHR</span></h1>
+          <p className="vault-subtitle">Secure Provider Access</p>
+        </div>
+
+        {serverError && (
+          <div className="vault-error-alert">
+            <AlertCircle size={18} />
+            <span>{serverError}</span>
+          </div>
+        )}
+
+        <Input
+          label="Provider ID / Email"
+          type="text"
+          name="identifier"
+          value={formData.identifier}
+          onChange={handleChange}
+          placeholder="your.email@example.com or +1234567890"
+          icon={<Mail size={18} />}
+          error={errors.identifier}
+          required
+        />
+
+        <Input
+          label="Secure Key"
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="••••••••"
+          icon={<Lock size={18} />}
+          error={errors.password}
+          required
+        />
+
+        <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '4px' }}>
+          <button
+            type="button"
+            onClick={() => setShowForgotPassword(true)}
+            className="vault-forgot-link"
+          >
+            Forgot Password?
+          </button>
+        </div>
+
+        <button type="submit" className="vault-submit-btn" disabled={loading}>
+          {loading ? 'Authenticating...' : 'Authenticate & Unlock'}
+        </button>
+
+        <div className="vault-auth-footer">
+          <p>
+            Don't have an account?{' '}
+            <Link to="/signup" className="vault-auth-link">Create Account</Link>
+          </p>
+        </div>
+      </form>
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (
