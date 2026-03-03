@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -9,7 +9,7 @@ import { validateEmail } from '../utils/utils';
 import './Login.css';
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     identifier: '',
@@ -108,6 +108,11 @@ const Login = () => {
     setForgotError('');
     setResetSuccess(false);
   };
+
+  // If user is already logged in and NOT in the unlock animation, redirect to dashboard
+  if (user && !unlocking) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="vault-login-page">

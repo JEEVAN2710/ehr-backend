@@ -88,11 +88,7 @@ function AppRoutes() {
       <Route path="/contact" element={<ContactPage />} />
 
       {/* Auth Routes */}
-      <Route path="/login" element={
-        <PublicRoute>
-          <Login />
-        </PublicRoute>
-      } />
+      <Route path="/login" element={<Login />} />
 
       <Route path="/signup" element={
         <PublicRoute>
