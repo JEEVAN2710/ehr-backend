@@ -104,7 +104,7 @@ router.post(
   '/login',
   loginLimiter,
   [
-    body('email').optional().isEmail().withMessage('Valid email is required'),
+    body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('phoneNumber').optional().isMobilePhone().withMessage('Valid phone number is required'),
     body('password').notEmpty().withMessage('Password is required'),
   ],
