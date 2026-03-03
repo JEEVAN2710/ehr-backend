@@ -23,6 +23,7 @@ const Login = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -63,7 +64,11 @@ const Login = () => {
       }
 
       await login(loginData.email || loginData.phoneNumber, formData.password, !isEmail);
-      navigate('/dashboard');
+      // Trigger vault unlock animation before navigating
+      setUnlocking(true);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2200);
     } catch (error) {
       setServerError(error.message || 'Login failed. Please check your credentials.');
     } finally {
@@ -110,7 +115,7 @@ const Login = () => {
       <div className="vault-ambient-light"></div>
 
       {/* Vault 3D Scene */}
-      <div className="vault-scene-container">
+      <div className={`vault-scene-container ${unlocking ? 'vault-is-unlocking' : ''}`}>
         <div className="vault-assembly">
           {/* Central vault core */}
           <div className="vault-core">
@@ -155,8 +160,13 @@ const Login = () => {
         </div>
       </div>
 
+      {/* Success Message */}
+      <div className={`vault-success-message ${unlocking ? 'vault-success-visible' : ''}`}>
+        ACCESS GRANTED<br />RECORDS DECRYPTED
+      </div>
+
       {/* Login Form Overlay */}
-      <form className="vault-login-overlay" onSubmit={handleSubmit}>
+      <form className={`vault-login-overlay ${unlocking ? 'vault-form-hiding' : ''}`} onSubmit={handleSubmit}>
         <div className="vault-app-header">
           <h1>Medi Locker <span>EHR</span></h1>
           <p className="vault-subtitle">Secure Provider Access</p>

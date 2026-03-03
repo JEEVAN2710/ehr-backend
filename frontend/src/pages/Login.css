@@ -175,9 +175,17 @@
 }
 
 /* Orbit 1 positions */
-.vault-pos-1 { transform: rotate(0deg) translate(160px) rotate(0deg); }
-.vault-pos-2 { transform: rotate(120deg) translate(160px) rotate(-120deg); }
-.vault-pos-3 { transform: rotate(240deg) translate(160px) rotate(-240deg); }
+.vault-pos-1 {
+    transform: rotate(0deg) translate(160px) rotate(0deg);
+}
+
+.vault-pos-2 {
+    transform: rotate(120deg) translate(160px) rotate(-120deg);
+}
+
+.vault-pos-3 {
+    transform: rotate(240deg) translate(160px) rotate(-240deg);
+}
 
 /* Orbit 2 positions */
 .vault-pos-4 {
@@ -185,11 +193,13 @@
     color: var(--purple-core);
     filter: drop-shadow(0 0 8px var(--purple-glow));
 }
+
 .vault-pos-5 {
     transform: rotate(180deg) translate(220px) rotate(-180deg);
     color: var(--purple-core);
     filter: drop-shadow(0 0 8px var(--purple-glow));
 }
+
 .vault-pos-6 {
     transform: rotate(300deg) translate(220px) rotate(-300deg);
     color: var(--purple-core);
@@ -197,8 +207,13 @@
 }
 
 /* Orbit 3 positions */
-.vault-pos-7 { transform: rotate(30deg) translate(280px) rotate(-30deg); }
-.vault-pos-8 { transform: rotate(150deg) translate(280px) rotate(-150deg); }
+.vault-pos-7 {
+    transform: rotate(30deg) translate(280px) rotate(-30deg);
+}
+
+.vault-pos-8 {
+    transform: rotate(150deg) translate(280px) rotate(-150deg);
+}
 
 /* --- Login Form Overlay --- */
 .vault-login-overlay {
@@ -361,18 +376,33 @@
 
 /* --- Animations --- */
 @keyframes vault-spin {
-    from { transform: translate(-50%, -50%) rotate(0deg); }
-    to { transform: translate(-50%, -50%) rotate(360deg); }
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
 }
 
 @keyframes vault-spin-reverse {
-    from { transform: translate(-50%, -50%) rotate(360deg); }
-    to { transform: translate(-50%, -50%) rotate(0deg); }
+    from {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+
+    to {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
 }
 
 @keyframes vault-pulse-atmosphere {
-    0% { opacity: 0.8; }
-    100% { opacity: 1; }
+    0% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 @keyframes vault-fadeInUp {
@@ -380,6 +410,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -426,6 +457,103 @@
     font-size: 13px;
 }
 
+/* ========================================
+   VAULT UNLOCK ANIMATION
+   ======================================== */
+
+/* --- Success Message --- */
+.vault-success-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    opacity: 0;
+    pointer-events: none;
+    text-align: center;
+    z-index: 200;
+    text-shadow: 0 0 30px var(--teal-glow), 0 0 60px rgba(20, 184, 166, 0.3);
+    line-height: 1.6;
+    transition: opacity 0.6s ease 1.2s;
+}
+
+.vault-success-visible {
+    opacity: 1;
+}
+
+/* --- Form hiding on unlock --- */
+.vault-form-hiding {
+    opacity: 0;
+    transform: translateY(30px);
+    pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* --- Vault unlock state --- */
+
+/* Handle rotates 90 degrees */
+.vault-is-unlocking .vault-handle {
+    transform: rotate(90deg);
+    transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Vault door glows intensely */
+.vault-is-unlocking .vault-door {
+    border-color: var(--teal-core);
+    box-shadow:
+        inset 0 0 40px var(--teal-glow),
+        0 0 80px var(--teal-glow),
+        0 0 120px rgba(20, 184, 166, 0.3);
+    transition: all 0.6s ease 0.3s;
+}
+
+/* Vault core pulses */
+.vault-is-unlocking .vault-core {
+    box-shadow:
+        0 0 100px rgba(20, 184, 166, 0.5),
+        0 0 200px rgba(20, 184, 166, 0.2),
+        inset 0 0 30px rgba(20, 184, 166, 0.5);
+    transition: box-shadow 0.8s ease 0.2s;
+}
+
+/* Orbit rings collapse and fade */
+.vault-is-unlocking .vault-orbit-ring {
+    opacity: 0;
+    transition: all 0.6s ease;
+}
+
+.vault-is-unlocking .vault-orbit-1 {
+    transform: translate(-50%, -50%) scale(0.3);
+}
+
+.vault-is-unlocking .vault-orbit-2 {
+    transform: translate(-50%, -50%) scale(0.2);
+    transition-delay: 0.1s;
+}
+
+.vault-is-unlocking .vault-orbit-3 {
+    transform: translate(-50%, -50%) scale(0.1);
+    transition-delay: 0.2s;
+}
+
+/* Floating icons fade out */
+.vault-is-unlocking .vault-icon-floater {
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.4s ease;
+}
+
+/* Background brightens slightly */
+.vault-is-unlocking~.vault-ambient-light {
+    background:
+        radial-gradient(circle at 50% 50%, rgba(20, 184, 166, 0.3) 0%, transparent 50%),
+        conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(20, 184, 166, 0.1) 50%, transparent 100%);
+    transition: all 0.8s ease 0.3s;
+}
+
 /* --- Responsive --- */
 @media (max-width: 600px) {
     .vault-login-overlay {
@@ -437,6 +565,11 @@
     .vault-assembly {
         transform: scale(0.6) rotateX(10deg);
     }
+
+    .vault-success-message {
+        font-size: 18px;
+        letter-spacing: 2px;
+    }
 }
 
 @media (max-width: 400px) {
@@ -447,5 +580,9 @@
 
     .vault-assembly {
         transform: scale(0.5) rotateX(10deg);
+    }
+
+    .vault-success-message {
+        font-size: 16px;
     }
 }
