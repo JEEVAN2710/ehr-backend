@@ -15,6 +15,10 @@ import MyAccessRequests from './pages/MyAccessRequests';
 import UserManagement from './pages/UserManagement';
 import UploadRecords from './pages/UploadRecords';
 import LoadingSpinner from './components/LoadingSpinner';
+import LandingPage from './pages/LandingPage';
+import FeaturesPage from './pages/FeaturesPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -77,7 +81,13 @@ const ComingSoon = ({ pageName }) => (
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Public Landing Pages */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/features" element={<FeaturesPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+
+      {/* Auth Routes */}
       <Route path="/login" element={
         <PublicRoute>
           <Login />
@@ -148,11 +158,8 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* Default Route */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
       {/* 404 */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
