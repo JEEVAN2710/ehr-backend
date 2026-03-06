@@ -48,7 +48,7 @@ router.get(
     req.params.patientId = 'my-records';
     next();
   },
-  authorizeRoles('doctor', 'labassistant'),
+  authorizeRoles('patient', 'doctor', 'labassistant'),
   getPatientRecords
 );
 
