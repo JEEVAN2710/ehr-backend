@@ -575,7 +575,7 @@ export const generateShareAllToken = async (req, res) => {
       data: {
         token: tokenString,
         expiresAt,
-        shareLink: `${req.protocol}://${req.get('host')}/shared/all/${tokenString}`,
+        shareLink: `${req.protocol}://${req.get('host')}/api/records/shared/all/${tokenString}`,
       },
     });
   } catch (error) {
