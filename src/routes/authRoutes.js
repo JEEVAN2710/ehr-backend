@@ -15,6 +15,7 @@ import {
   updateUser,
   verifyPatientEmail,
   getEligibleUploaders,
+  getPatientPhoto,
 } from '../controllers/authController.js';
 import rateLimit from 'express-rate-limit';
 import authenticateToken from '../middleware/auth.js';
@@ -40,6 +41,12 @@ const otpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5,
   message: 'Too many OTP requests, please try again later',
+});
+
+const photoLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,
+  message: 'Too many photo requests, please try again later',
 });
 
 // Registration - Step 1: Create account and send OTP
@@ -128,6 +135,7 @@ router.put(
   [
     body('phoneNumber').optional().isMobilePhone().withMessage('Invalid phone number'),
     body('dateOfBirth').optional().isISO8601().withMessage('Invalid date format'),
+    body('profilePhotoUrl').optional().isURL().withMessage('Invalid photo URL'),
   ],
   updateProfile
 );
@@ -192,6 +200,14 @@ router.put(
 
 // Get eligible uploaders (admin only)
 router.get('/users/eligible-uploaders', authenticateToken, authorizeRoles('admin'), getEligibleUploaders);
+
+// Get patient photo URL (public - for NFC emergency access, no auth required)
+router.get(
+  '/patient-photo/:patientId',
+  photoLimiter,
+  [param('patientId').isMongoId().withMessage('Valid patient ID is required')],
+  getPatientPhoto
+);
 
 export default router;
 

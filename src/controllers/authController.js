@@ -1,5 +1,6 @@
 import { validationResult } from 'express-validator';
 import { User } from '../models/User.js';
+import { AuditLog } from '../models/AuditLog.js';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../services/jwtService.js';
 import { sendMail } from '../services/mailService.js';
 import { createAndSendOTP, verifyOTP as verifyOTPService } from '../services/otpService.js';
@@ -239,6 +240,16 @@ export const login = async (req, res) => {
     }
 
     if (!user.isActive) {
+      await AuditLog.create({
+        action: 'login',
+        userId: user._id,
+        userRole: user.role,
+        status: 'unauthorized',
+        errorMessage: 'User account is inactive',
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('user-agent'),
+      }).catch(err => console.error('Failed to log audit event:', err));
+
       return res.status(401).json({
         success: false,
         message: 'User account is inactive',
@@ -248,6 +259,16 @@ export const login = async (req, res) => {
     const isPasswordValid = await user.matchPassword(password);
 
     if (!isPasswordValid) {
+      await AuditLog.create({
+        action: 'login',
+        userId: user._id,
+        userRole: user.role,
+        status: 'failure',
+        errorMessage: 'Invalid credentials provided',
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('user-agent'),
+      }).catch(err => console.error('Failed to log audit event:', err));
+
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials',
@@ -256,6 +277,16 @@ export const login = async (req, res) => {
 
     const accessToken = generateAccessToken(user._id, user.role);
     const refreshToken = generateRefreshToken(user._id);
+
+    // Record successful login
+    await AuditLog.create({
+      action: 'login',
+      userId: user._id,
+      userRole: user.role,
+      status: 'success',
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('user-agent'),
+    }).catch(err => console.error('Failed to log audit event:', err));
 
     return res.status(200).json({
       success: true,
@@ -366,7 +397,7 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    const { phoneNumber, dateOfBirth } = req.body;
+    const { phoneNumber, dateOfBirth, profilePhotoUrl } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -394,6 +425,11 @@ export const updateProfile = async (req, res) => {
     // Update date of birth if provided
     if (dateOfBirth !== undefined) {
       user.dateOfBirth = dateOfBirth || null;
+    }
+
+    // Update profile photo URL if provided
+    if (profilePhotoUrl !== undefined) {
+      user.profilePhotoUrl = profilePhotoUrl || null;
     }
 
     await user.save();
@@ -751,6 +787,34 @@ export const getEligibleUploaders = async (req, res) => {
   }
 };
 
+// Get patient photo URL (public endpoint for NFC emergency access)
+export const getPatientPhoto = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const user = await User.findById(patientId).select('profilePhotoUrl firstName lastName');
+
+    if (!user || !user.profilePhotoUrl) {
+      return res.status(404).json({
+        success: false,
+        message: 'No photo available for this patient',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      photoUrl: user.profilePhotoUrl,
+      patientName: [user.firstName, user.lastName].filter(Boolean).join(' '),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve patient photo',
+      error: error.message,
+    });
+  }
+};
+
 export default {
   register,
   verifyOTP,
@@ -766,4 +830,5 @@ export default {
   updateUser,
   verifyPatientEmail,
   getEligibleUploaders,
+  getPatientPhoto,
 };

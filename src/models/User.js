@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  profilePhotoUrl: {
+    type: String,
+    default: null,  // URL to patient's profile photo (for NFC card display)
+  },
   isActive: {
     type: Boolean,
     default: true,
