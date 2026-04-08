@@ -83,6 +83,14 @@ export const register = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error('❌ Registration error:', error.message);
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(409).json({
+        success: false,
+        message: `${field} is already in use by another account`,
+      });
+    }
     return res.status(500).json({
       success: false,
       message: 'Registration failed',
@@ -390,9 +398,10 @@ export const updateProfile = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      const msgs = errors.array().map(e => e.msg).join(', ');
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
+        message: `Validation failed: ${msgs}`,
         errors: errors.array(),
       });
     }

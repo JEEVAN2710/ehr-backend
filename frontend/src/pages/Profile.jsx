@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import ShareAllModal from '../components/ShareAllModal';
-import { Lock, AlertCircle, CheckCircle, Share2, Edit2, Phone, Calendar } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle, Share2, Edit2, Phone, Calendar, Camera, Link } from 'lucide-react';
 import { validatePassword, getPasswordStrength } from '../utils/utils';
 import { formatDate, formatRole } from '../utils/utils';
 import { USER_ROLES } from '../utils/constants';
@@ -25,7 +25,8 @@ const Profile = () => {
     });
     const [profileData, setProfileData] = useState({
         phoneNumber: user?.phoneNumber || '',
-        dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : ''
+        dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
+        profilePhotoUrl: user?.profilePhotoUrl || ''
     });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -131,8 +132,19 @@ const Profile = () => {
             <div className="profile-content">
                 <Card glass className="profile-card">
                     <div className="profile-avatar-section">
-                        <div className="profile-avatar-large">
-                            {user?.firstName?.[0]}{user?.lastName?.[0]}
+                        <div className="profile-avatar-large" style={user?.profilePhotoUrl ? { padding: 0, overflow: 'hidden', border: 'none' } : {}}>
+                            {user?.profilePhotoUrl ? (
+                                <img 
+                                    key={`avatar-${user.profilePhotoUrl}`}
+                                    src={user.profilePhotoUrl} 
+                                    alt="Profile" 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                                />
+                            ) : null}
+                            <span style={user?.profilePhotoUrl ? { display: 'none' } : {}}>
+                                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                            </span>
                         </div>
                         <div className="profile-name">
                             <h2>{user?.firstName} {user?.lastName}</h2>
@@ -159,6 +171,17 @@ const Profile = () => {
                                     <span className="info-label">Account Created</span>
                                     <span className="info-value">{formatDate(user?.createdAt)}</span>
                                 </div>
+                                {user?.profilePhotoUrl && (
+                                    <div className="info-row">
+                                        <span className="info-label">Profile Photo</span>
+                                        <span className="info-value" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Camera size={14} />
+                                            <a href={user.profilePhotoUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'underline', wordBreak: 'break-all' }}>
+                                                View Photo
+                                            </a>
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <div style={{ marginTop: 'var(--spacing-lg)', paddingTop: 'var(--spacing-lg)', borderTop: '1px solid var(--color-border)' }}>
                                 <Button
@@ -207,6 +230,76 @@ const Profile = () => {
                                 error={errors.dateOfBirth}
                             />
 
+                            <div className="input-group" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                                <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
+                                    Profile Photo
+                                </label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    {profileData.profilePhotoUrl ? (
+                                        <div style={{ position: 'relative' }}>
+                                            <img 
+                                                src={profileData.profilePhotoUrl} 
+                                                alt="Preview" 
+                                                style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-border)' }}
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'var(--color-background-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--color-border)' }}>
+                                            <Camera size={24} color="var(--color-text-tertiary)" />
+                                        </div>
+                                    )}
+                                    
+                                    <div style={{ flex: 1 }}>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            id="photo-upload"
+                                            style={{ display: 'none' }}
+                                            onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+                                                
+                                                if (file.size > 5 * 1024 * 1024) {
+                                                    setProfileError('Photo must be less than 5MB');
+                                                    return;
+                                                }
+                                                
+                                                setProfileError('');
+                                                setProfileLoading(true);
+                                                try {
+                                                    const publicUrl = await api.uploadProfilePhoto(file, user._id);
+                                                    setProfileData(prev => ({ ...prev, profilePhotoUrl: publicUrl }));
+                                                    
+                                                    // Auto-submit profile update so avatar updates everywhere instantly
+                                                    const response = await api.updateProfile({ ...profileData, profilePhotoUrl: publicUrl });
+                                                    updateUser(response.data.user);
+                                                    setProfileSuccess('Profile photo updated successfully!');
+                                                    setTimeout(() => setProfileSuccess(''), 3000);
+                                                } catch (err) {
+                                                    setProfileError('Failed to upload photo: ' + err.message);
+                                                } finally {
+                                                    setProfileLoading(false);
+                                                }
+                                            }}
+                                        />
+                                        <Button 
+                                            type="button" 
+                                            variant="secondary" 
+                                            onClick={() => document.getElementById('photo-upload').click()}
+                                            disabled={profileLoading}
+                                            icon={<Camera size={16} />}
+                                            style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+                                        >
+                                            {profileLoading ? 'Uploading...' : (profileData.profilePhotoUrl ? 'Change Photo' : 'Upload Photo')}
+                                        </Button>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-tertiary)', marginTop: '6px' }}>
+                                            JPG, PNG or WebP. Max 5MB.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="form-actions">
                                 <Button
                                     type="submit"
@@ -222,7 +315,8 @@ const Profile = () => {
                                         setShowEditProfile(false);
                                         setProfileData({
                                             phoneNumber: user?.phoneNumber || '',
-                                            dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : ''
+                                            dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
+                                            profilePhotoUrl: user?.profilePhotoUrl || ''
                                         });
                                         setErrors({});
                                         setProfileError('');

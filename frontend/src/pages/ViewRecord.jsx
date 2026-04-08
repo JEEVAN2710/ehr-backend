@@ -122,14 +122,14 @@ const ViewRecord = () => {
                 {/* Tab Navigation */}
                 <div className="record-tabs">
                     <button
-                        className={`tab - button ${activeTab === 'details' ? 'active' : ''} `}
+                        className={`tab-button ${activeTab === 'details' ? 'active' : ''}`}
                         onClick={() => setActiveTab('details')}
                     >
                         <Info size={18} />
                         Details
                     </button>
                     <button
-                        className={`tab - button ${activeTab === 'blockchain' ? 'active' : ''} `}
+                        className={`tab-button ${activeTab === 'blockchain' ? 'active' : ''}`}
                         onClick={() => setActiveTab('blockchain')}
                     >
                         <Shield size={18} />
@@ -200,7 +200,7 @@ const ViewRecord = () => {
                                         const isChecking = checkingFiles && fileExistence[file.key] === undefined;
 
                                         return (
-                                            <div key={index} className={`file - item ${!fileExists ? 'file-missing' : ''} `}>
+                                            <div key={index} className={`file-item ${!fileExists ? 'file-missing' : ''}`}>
                                                 <div className="file-info">
                                                     <FileText size={24} className="file-icon" />
                                                     <div>

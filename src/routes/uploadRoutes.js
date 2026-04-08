@@ -4,7 +4,20 @@ import { getPresignedUploadUrl, getPresignedDownloadUrl, checkFileExistsControll
 import authenticateToken from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
 
+import { generatePresignedDownloadUrl } from '../services/s3Service.js';
+
 const router = express.Router();
+
+// Public photo proxy for NFC Card (Glide needs direct photo URLs, so this redirects to a presigned URL)
+router.get('/public-photo/:fileKey(*)', async (req, res) => {
+  try {
+    const fileKey = req.params.fileKey;
+    const downloadUrl = await generatePresignedDownloadUrl(fileKey);
+    res.redirect(downloadUrl);
+  } catch (err) {
+    res.status(404).send('Photo not found');
+  }
+});
 
 router.use(authenticateToken);
 

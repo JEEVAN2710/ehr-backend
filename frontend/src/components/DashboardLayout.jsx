@@ -132,8 +132,19 @@ const DashboardLayout = ({ children }) => {
                                 {formatRole(user?.role)}
                             </Badge>
                         </div>
-                        <div className="user-avatar">
-                            {user?.firstName?.[0]}{user?.lastName?.[0]}
+                        <div className="user-avatar" style={user?.profilePhotoUrl ? { padding: 0, overflow: 'hidden', border: 'none' } : {}}>
+                            {user?.profilePhotoUrl ? (
+                                <img 
+                                    key={user.profilePhotoUrl}
+                                    src={user.profilePhotoUrl} 
+                                    alt="Profile" 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                />
+                            ) : null}
+                            <span style={user?.profilePhotoUrl ? { display: 'none' } : { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                            </span>
                         </div>
                     </div>
                 </header>

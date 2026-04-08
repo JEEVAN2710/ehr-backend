@@ -133,9 +133,9 @@ router.put(
   '/profile',
   authenticateToken,
   [
-    body('phoneNumber').optional().isMobilePhone().withMessage('Invalid phone number'),
-    body('dateOfBirth').optional().isISO8601().withMessage('Invalid date format'),
-    body('profilePhotoUrl').optional().isURL().withMessage('Invalid photo URL'),
+    body('phoneNumber').optional({ checkFalsy: true }).isMobilePhone().withMessage('Invalid phone number'),
+    body('dateOfBirth').optional({ checkFalsy: true }).isISO8601().withMessage('Invalid date format'),
+    body('profilePhotoUrl').optional({ checkFalsy: true }).isURL({ require_tld: false }).withMessage('Invalid photo URL'),
   ],
   updateProfile
 );

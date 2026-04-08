@@ -262,6 +262,36 @@ const api = {
         return data;
     },
 
+    // Upload Profile Photo
+    uploadProfilePhoto: async (file, patientId) => {
+        const token = tokenManager.getAccessToken();
+        
+        // 1. Get presigned upload URL
+        const presignedResponse = await fetch(`${API_BASE_URL}/api/upload/presigned-upload`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ filename: file.name, contentType: file.type, patientId })
+        });
+        const presignedData = await presignedResponse.json();
+        if (!presignedResponse.ok) throw new Error(presignedData.message);
+
+        // 2. Upload file to R2
+        const uploadResponse = await fetch(presignedData.data.uploadUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': file.type
+            },
+            body: file
+        });
+        if (!uploadResponse.ok) throw new Error('Failed to upload photo');
+
+        // 3. Return the public proxy URL
+        return `${API_BASE_URL}/api/upload/public-photo/${encodeURIComponent(presignedData.data.key)}`;
+    },
+
     // Change Password
     changePassword: async (currentPassword, newPassword) => {
         const token = tokenManager.getAccessToken();
@@ -962,6 +992,17 @@ const api = {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         return data;
+    },
+
+    // Get real-time system logs for admin dashboard
+    getSystemLogs: async () => {
+        const token = tokenManager.getAccessToken();
+        const response = await fetch(`${API_BASE_URL}/api/admin/logs`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        return data.data; // Return the actual array of formatted logs
     }
 };
 
